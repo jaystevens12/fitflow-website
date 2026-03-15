@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solar & Battery Advisor | STS Tech Group</title>
+<style>
+  :root {
+    --navy: #0a1628; --navy-mid: #0f2040; --navy-light: #1a3a5c;
+    --blue: #1e90ff; --blue-light: #4db8ff; --gold: #f0a500; --gold-light: #ffc94d;
+    --green: #00c853; --red: #ff4444; --text: #e8f0fe; --text-muted: #8fa8c8;
+    --card: rgba(255,255,255,0.04); --border: rgba(255,255,255,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--navy); color: var(--text); min-height: 100vh; }
+  header { background: linear-gradient(135deg,var(--navy-mid),var(--navy-light)); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg,var(--gold),var(--blue)); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .logo h1 { font-size: 16px; font-weight: 700; }
+  .logo p { font-size: 11px; color: var(--text-muted); }
+  .badge { background: rgba(240,165,0,0.15); border: 1px solid var(--gold); color: var(--gold); padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .tabs { display: flex; background: var(--navy-mid); border-bottom: 1px solid var(--border); padding: 0 24px; gap: 2px; overflow-x: auto; }
+  .tab { padding: 12px 16px; cursor: pointer; font-size: 12px; color: var(--text-muted); border-bottom: 2px solid transparent; white-space: nowrap; transition: all 0.2s; }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+  .main { padding: 24px; max-width: 1400px; margin: 0 auto; }
+  .page { display: none; }
+  .page.active { display: block; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+  .card-title { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
+  label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 5px; }
+  input, select, textarea { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 7px; padding: 9px 12px; color: var(--text); font-size: 13px; outline: none; transition: border 0.2s; }
+  input:focus, select:focus { border-color: var(--blue); }
+  select option { background: var(--navy-mid); }
+  .btn { padding: 9px 20px; border-radius: 7px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; }
+  .btn-primary { background: var(--blue); color: white; }
+  .btn-primary:hover { background: var(--blue-light); }
+  .btn-gold { background: var(--gold); color: var(--navy); }
+  .btn-gold:hover { background: var(--gold-light); }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
+  .btn-outline:hover { border-color: var(--blue); color: var(--blue); }
+  .btn-sm { padding: 6px 14px; font-size: 12px; }
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+  .sec-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+  .sec-title { font-size: 18px; font-weight: 700; }
+  .sec-sub { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+  .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 18px; text-align: center; }
+  .stat-val { font-size: 26px; font-weight: 700; margin: 6px 0 3px; }
+  .stat-lbl { font-size: 11px; color: var(--text-muted); }
+  .blue { color: var(--blue); } .gold { color: var(--gold); } .green { color: var(--green); } .red { color: var(--red); }
+  .alert { border-radius: 8px; padding: 10px 14px; font-size: 12px; margin-bottom: 14px; }
+  .alert-info { background: rgba(30,144,255,0.1); border-left: 3px solid var(--blue); }
+  .alert-warning { background: rgba(240,165,0,0.1); border-left: 3px solid var(--gold); }
+  .alert-success { background: rgba(0,200,83,0.1); border-left: 3px solid var(--green); }
+  .bill-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .bill-table th { background: rgba(255,255,255,0.05); padding: 9px 12px; text-align: left; font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; }
+  .bill-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
+  .bill-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .bill-table input { padding: 5px 8px; font-size: 12px; }
+  .tariff-opt { border: 2px solid var(--border); border-radius: 10px; padding: 14px; cursor: pointer; transition: all 0.2s; }
+  .tariff-opt:hover { border-color: var(--blue); }
+  .tariff-opt.sel { border-color: var(--gold); background: rgba(240,165,0,0.05); }
+  .tariff-opt h4 { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+  .tariff-opt p { font-size: 11px; color: var(--text-muted); }
+  .trow { display: flex; justify-content: space-between; padding: 5px 0; font-size: 12px; border-bottom: 1px solid var(--border); }
+  .trow:last-child { border: none; }
+  .tval { font-weight: 600; color: var(--gold); }
+  .rec-card { border: 2px solid var(--border); border-radius: 12px; padding: 20px; position: relative; transition: all 0.2s; }
+  .rec-card:hover { border-color: var(--blue); transform: translateY(-2px); }
+  .rec-card.best { border-color: var(--gold); }
+  .rec-card.best::before { content: '★ RECOMMENDED'; position: absolute; top: -11px; left: 50%; transform: translateX(-50%); background: var(--gold); color: var(--navy); padding: 2px 12px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+  .rec-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .rec-size { font-size: 26px; font-weight: 800; color: var(--gold); margin: 8px 0; }
+  .rec-items { font-size: 12px; color: var(--text-muted); line-height: 1.9; }
+  .rec-sav { font-size: 20px; font-weight: 700; color: var(--green); margin: 10px 0 3px; }
+  .rec-pay { font-size: 11px; color: var(--text-muted); }
+  .prog { background: rgba(255,255,255,0.07); border-radius: 4px; height: 6px; margin: 8px 0; overflow: hidden; }
+  .prog-fill { height: 100%; border-radius: 4px; }
+  .badge-sm { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 600; }
+  .b-blue { background: rgba(30,144,255,0.2); color: var(--blue-light); }
+  .b-gold { background: rgba(240,165,0,0.2); color: var(--gold); }
+  .b-green { background: rgba(0,200,83,0.2); color: var(--green); }
+  .wbox { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px; text-align: center; }
+  .wbox .wv { font-size: 18px; font-weight: 700; color: var(--blue); }
+  .wbox .wl { font-size: 10px; color: var(--text-muted); margin-top: 3px; }
+  .prop-wrap { background: white; color: #1a1a1a; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+  .prop-hdr { background: linear-gradient(135deg,#0a1628,#1a3a5c); color: white; padding: 32px 36px; }
+  .prop-body { padding: 32px 36px; }
+  .prop-sec { margin-bottom: 24px; }
+  .prop-sec h3 { font-size: 12px; font-weight: 700; color: #0a1628; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #f0a500; padding-bottom: 5px; margin-bottom: 12px; }
+  .prop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .pstat { background: #f8f9fa; border-radius: 8px; padding: 12px; text-align: center; }
+  .pstat-v { font-size: 20px; font-weight: 700; color: #0a1628; }
+  .pstat-l { font-size: 10px; color: #666; margin-top: 2px; }
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+  @media(max-width:768px) { .main{padding:12px;} .grid-2,.grid-3,.grid-4{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">☀️</div>
+    <div><h1>Solar & Battery Advisor</h1><p>STS Tech Group — Intelligent Energy Analysis</p></div>
+  </div>
+  <span class="badge">CoCT & Eskom 2024/25</span>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="go('bills')">📄 Bill Input</div>
+  <div class="tab" onclick="go('tariff')">⚡ Tariff Setup</div>
+  <div class="tab" onclick="go('analysis')">📊 Analysis</div>
+  <div class="tab" onclick="go('recs')">☀️ Recommendations</div>
+  <div class="tab" onclick="go('battery')">🔋 Battery & Arbitrage</div>
+  <div class="tab" onclick="go('wheeling')">🔄 Wheeling</div>
+  <div class="tab" onclick="go('proposal')">📋 Proposal</div>
+</div>
+
+<div class="main">
+
+<!-- BILLS -->
+<div id="pg-bills" class="page active">
+  <div class="sec-header">
+    <div><div class="sec-title">📄 12-Month Bill Input</div><div class="sec-sub">Enter client electricity data month by month</div></div>
+    <div class="btn-row" style="margin:0">
+      <button class="btn btn-outline btn-sm" onclick="loadSample()">Load Sample Data</button>
+      <button class="btn btn-primary btn-sm" onclick="runAnalysis()">Analyse →</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Client Information</div>
+    <div class="grid-3">
+      <div><label>Client Name</label><input id="cName" placeholder="e.g. Malta Recycling (Pty) Ltd"></div>
+      <div><label>Property / Site</label><input id="cSite" placeholder="e.g. Main Factory"></div>
+      <div><label>Prepared By</label><input id="cPrepBy" value="Jay Stevens — STS Tech Group"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Monthly Consumption & Cost</div>
+    <div class="alert alert-info">ℹ️ kWh and Total Bill (R) are the minimum required fields. Peak/Off-Peak split improves battery & arbitrage accuracy.</div>
+    <div style="overflow-x:auto">
+      <table class="bill-table"><thead><tr>
+        <th>Month</th><th>kWh Total</th><th>Peak kWh</th><th>Off-Peak kWh</th><th>Std kWh</th><th>Demand (kVA)</th><th>Total Bill (R)</th><th>Notes</th>
+      </tr></thead><tbody id="billBody"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- TARIFF -->
+<div id="pg-tariff" class="page">
+  <div class="sec-header"><div><div class="sec-title">⚡ Tariff Configuration</div><div class="sec-sub">Select client's supply type and tariff structure</div></div></div>
+  <div class="card">
+    <div class="card-title">Supplier & Supply Type</div>
+    <div class="grid-2" style="margin-bottom:16px">
+      <div><label>Electricity Supplier</label>
+        <select id="supplier" onchange="refreshTariffs()">
+          <option value="coct">City of Cape Town (CoCT)</option>
+          <option value="eskom">Eskom Direct</option>
+          <option value="other">Other Municipality</option>
+        </select>
+      </div>
+      <div><label>Supply Voltage</label>
+        <select id="voltage" onchange="refreshTariffs()">
+          <option value="lv">Low Voltage (LV) — &lt;500V</option>
+          <option value="mv">Medium Voltage (MV) — 11kV</option>
+          <option value="hv">High Voltage (HV) — 33kV+</option>
+        </select>
+      </div>
+    </div>
+    <div class="grid-3" id="tariffOpts"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Active Tariff Rates</div>
+    <div id="tariffRates"><p style="color:var(--text-muted);font-size:13px">Select a tariff above</p></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Custom Tariff Override</div>
+    <div class="alert alert-warning">⚠️ Use this if the client has a negotiated rate or you have the latest municipal increases.</div>
+    <div class="grid-4">
+      <div><label>Peak Rate (R/kWh)</label><input type="number" id="cPeak" step="0.01" placeholder="e.g. 3.85"></div>
+      <div><label>Off-Peak Rate (R/kWh)</label><input type="number" id="cOffpeak" step="0.01" placeholder="e.g. 1.45"></div>
+      <div><label>Standard/Flat Rate (R/kWh)</label><input type="number" id="cStd" step="0.01" placeholder="e.g. 2.20"></div>
+      <div><label>NMD (kVA)</label><input type="number" id="nmd" placeholder="e.g. 200"></div>
+    </div>
+    <div class="grid-4" style="margin-top:12px">
+      <div><label>Demand Charge (R/kVA)</label><input type="number" id="demChg" step="0.01" placeholder="e.g. 145"></div>
+      <div><label>Network Access (R/month)</label><input type="number" id="netChg" step="0.01" placeholder="e.g. 2500"></div>
+      <div><label>Tariff Escalation (%/yr)</label><input type="number" id="esc" value="12" step="0.5"></div>
+      <div><label>WACC / Discount Rate (%)</label><input type="number" id="wacc" value="10" step="0.5"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="applyCustom()">Apply Custom Tariff</button>
+      <button class="btn btn-outline" onclick="refreshTariffs()">Reset to Preset</button>
+    </div>
+  </div>
+</div>
+
+<!-- ANALYSIS -->
+<div id="pg-analysis" class="page">
+  <div class="sec-header">
+    <div><div class="sec-title">📊 Consumption Analysis</div><div class="sec-sub">Annual patterns, cost breakdown, and demand profile</div></div>
+    <button class="btn btn-gold" onclick="go('recs')">View Recommendations →</button>
+  </div>
+  <div class="grid-4" id="statsRow"></div>
+  <div class="grid-2" style="margin-top:16px">
+    <div class="card"><div class="card-title">Monthly Consumption (kWh)</div><canvas id="cChart" height="200"></canvas></div>
+    <div class="card"><div class="card-title">Monthly Cost (R)</div><canvas id="costChart" height="200"></canvas></div>
+  </div>
+  <div class="grid-2" style="margin-top:4px">
+    <div class="card"><div class="card-title">Peak vs Off-Peak vs Standard</div><canvas id="touChart" height="180"></canvas></div>
+    <div class="card"><div class="card-title">Blended Rate Trend (R/kWh)</div><canvas id="rateChart" height="180"></canvas></div>
+  </div>
+</div>
+
+<!-- RECOMMENDATIONS -->
+<div id="pg-recs" class="page">
+  <div class="sec-header">
+    <div><div class="sec-title">☀️ Solar Recommendations</div><div class="sec-sub">Three system options sized to your consumption</div></div>
+  </div>
+  <div class="alert alert-success" id="recAlert">✅ Run analysis first to generate recommendations.</div>
+  <div class="grid-3" id="recCards"></div>
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">System Sizing Parameters</div>
+    <div class="grid-4">
+      <div><label>Peak Sun Hours (h/day)</label><input type="number" id="psh" value="5.2" step="0.1"></div>
+      <div><label>System Derate Factor</label><input type="number" id="derate" value="0.80" step="0.01"></div>
+      <div><label>Panel Wattage (Wp)</label><input type="number" id="pWatt" value="600" step="10"></div>
+      <div><label>Installed Cost (R/Wp)</label><input type="number" id="rpwp" value="10" step="0.5"></div>
+    </div>
+    <div class="grid-4" style="margin-top:10px">
+      <div><label>Feed-in / Wheeling Rate (R/kWh)</label><input type="number" id="feedin" value="1.50" step="0.05"></div>
+      <div><label>System Lifetime (years)</label><input type="number" id="life" value="25"></div>
+      <div><label>Panel Degradation (%/yr)</label><input type="number" id="degrade" value="0.5" step="0.1"></div>
+      <div><label>Section 12B (%)</label><select id="s12b"><option value="0">Not Applicable</option><option value="50" selected>Year 1: 50%</option></select></div>
+    </div>
+    <div class="btn-row"><button class="btn btn-primary" onclick="buildRecs()">Recalculate</button></div>
+  </div>
+  <div class="card" style="margin-top:4px">
+    <div class="card-title">25-Year Cumulative Savings Projection</div>
+    <canvas id="finChart" height="180"></canvas>
+  </div>
+</div>
+
+<!-- BATTERY -->
+<div id="pg-battery" class="page">
+  <div class="sec-header"><div><div class="sec-title">🔋 Battery Storage & Arbitrage</div><div class="sec-sub">Peak shaving, TOU arbitrage, and backup scenarios</div></div></div>
+  <div class="card">
+    <div class="card-title">TOU Arbitrage Strategy</div>
+    <div class="grid-4">
+      <div><label>Battery Strategy</label>
+        <select id="battStrat">
+          <option value="arb">TOU Arbitrage — charge off-peak, discharge peak</option>
+          <option value="peak">Peak Load Shaving — reduce demand charges</option>
+          <option value="backup">Backup / UPS Priority</option>
+          <option value="hybrid">Hybrid — arbitrage + backup</option>
+        </select>
+      </div>
+      <div><label>Battery Chemistry</label>
+        <select id="battChem">
+          <option value="lfp">LFP (Lithium Iron Phosphate) ✓ Preferred</option>
+          <option value="nmc">NMC (Lithium Nickel Manganese)</option>
+        </select>
+      </div>
+      <div><label>Battery Cost (R/kWh installed)</label><input type="number" id="battCostKwh" value="4500" step="100"></div>
+      <div><label>Round-Trip Efficiency (%)</label><input type="number" id="battEff" value="95"></div>
+    </div>
+    <div class="btn-row"><button class="btn btn-primary" onclick="buildBatt()">Model Battery Options</button></div>
+  </div>
+  <div class="grid-3" id="battCards"></div>
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">Monthly Arbitrage Revenue (20kWh system)</div>
+    <canvas id="arbChart" height="180"></canvas>
+  </div>
+</div>
+
+<!-- WHEELING -->
+<div id="pg-wheeling" class="page">
+  <div class="sec-header"><div><div class="sec-title">🔄 Solar Wheeling Analysis</div><div class="sec-sub">Grid export revenue and bilateral wheeling modelling</div></div></div>
+  <div class="alert alert-info">ℹ️ Wheeling allows surplus solar to be fed into the grid or transmitted to another site — generating revenue or offsetting costs at remote premises.</div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Wheeling Parameters</div>
+      <div style="margin-bottom:12px"><label>Agreement Type</label>
+        <select id="wType">
+          <option value="feedin">Net Metering / Feed-in Tariff</option>
+          <option value="bilateral">Bilateral Wheeling Agreement</option>
+          <option value="virtual">Virtual Net Metering</option>
+          <option value="ppa">Power Purchase Agreement (PPA)</option>
+        </select>
+      </div>
+      <div class="grid-2">
+        <div><label>Wheeling Rate (R/kWh)</label><input type="number" id="wRate" value="1.50" step="0.05"></div>
+        <div><label>Network Fee (R/kWh)</label><input type="number" id="wNet" value="0.35" step="0.01"></div>
+      </div>
+      <div class="btn-row"><button class="btn btn-primary" onclick="calcWheel()">Calculate</button></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Wheeling Revenue Projection</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">
+        <div class="wbox"><div class="wv" id="wKwh">—</div><div class="wl">Annual Export kWh</div></div>
+        <div class="wbox"><div class="wv" id="wRev">—</div><div class="wl">Annual Revenue (R)</div></div>
+        <div class="wbox"><div class="wv" id="w25">—</div><div class="wl">25-Year Revenue (R)</div></div>
+      </div>
+      <canvas id="wheelChart" height="160"></canvas>
+    </div>
+  </div>
+  <div class="card" style="margin-top:4px">
+    <div class="card-title">Wheeling Notes for Proposal</div>
+    <textarea id="wNotes" rows="3" placeholder="Wheeling agreement notes, municipality approvals, off-taker details..."></textarea>
+  </div>
+</div>
+
+<!-- PROPOSAL -->
+<div id="pg-proposal" class="page">
+  <div class="sec-header">
+    <div><div class="sec-title">📋 Client Proposal Generator</div><div class="sec-sub">Professional proposal ready to present or print</div></div>
+    <div class="btn-row" style="margin:0">
+      <button class="btn btn-outline btn-sm" onclick="window.print()">🖨️ Print / Save PDF</button>
+      <button class="btn btn-gold" onclick="genProposal()">Generate Proposal</button>
+    </div>
+  </div>
+  <div id="propOut"><div class="alert alert-warning">⚠️ Complete Bill Input and Tariff Setup, then click Generate Proposal.</div></div>
+</div>
+
+</div><!-- /main -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+const MO = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+let bills = MO.map(m => ({month:m,kwh:0,peak:0,offpeak:0,std:0,demand:0,total:0,notes:''}));
+let tariff = null, analysis = null, charts = {};
+
+const TARIFFS = {
+  coct:{
+    lv:[
+      {id:'coct_dom',name:'Domestic (Flat)',desc:'Residential flat rate',type:'flat',flat:2.87,fixed:380,esc:12},
+      {id:'coct_small',name:'Landrate / Small Commercial',desc:'LV step tariff <100kVA',type:'flat',flat:2.64,fixed:520,esc:12},
+      {id:'coct_tou',name:'LV Time-of-Use',desc:'LV with TOU metering',type:'tou',peak:3.85,offpeak:1.45,standard:2.20,demand:145,fixed:1850,esc:12,phours:'07:00–09:00 & 17:00–19:00',tw:{peak:[[7,9],[17,19]],offpeak:[[22,6]],std:[[9,17],[19,22]]}}
+    ],
+    mv:[
+      {id:'coct_mv',name:'MV Time-of-Use',desc:'MV 11kV with TOU',type:'tou',peak:3.42,offpeak:1.21,standard:1.98,demand:162,fixed:4200,esc:12,phours:'07:00–09:00 & 17:00–21:00',tw:{peak:[[7,9],[17,21]],offpeak:[[22,6]],std:[[9,17],[21,22]]}}
+    ]
+  },
+  eskom:{
+    lv:[
+      {id:'esk_home',name:'Homelight (Domestic)',desc:'Eskom residential',type:'flat',flat:2.74,fixed:290,esc:12},
+      {id:'esk_biz',name:'Business Rate (Flat)',desc:'LV commercial no TOU',type:'flat',flat:2.58,demand:98,fixed:620,esc:12},
+      {id:'esk_tou',name:'Ruraflex / Nightsave Urban',desc:'LV TOU — farms & commercial',type:'tou',peak:3.66,offpeak:1.08,standard:1.89,demand:118,fixed:1200,esc:12,phours:'06:00–09:00 & 17:00–19:00',tw:{peak:[[6,9],[17,19]],offpeak:[[22,6]],std:[[9,17],[19,22]]}}
+    ],
+    mv:[
+      {id:'esk_mega',name:'Megaflex MV TOU',desc:'Eskom MV Time-of-Use 11kV',type:'tou',peak:3.28,offpeak:1.02,standard:1.75,demand:175,fixed:3800,esc:12,phours:'07:00–10:00 & 18:00–20:00',tw:{peak:[[7,10],[18,20]],offpeak:[[22,6]],std:[[10,18],[20,22]]}},
+      {id:'esk_flat',name:'Megaflex Flat Rate',desc:'Eskom MV non-TOU',type:'flat',flat:2.18,demand:165,fixed:3400,esc:12}
+    ]
+  }
+};
+
+// INIT BILLS TABLE
+function initBills(){
+  const b=document.getElementById('billBody'); b.innerHTML='';
+  bills.forEach((r,i)=>{
+    b.innerHTML+=`<tr>
+      <td><strong>${r.month}</strong></td>
+      <td><input type="number" id="k${i}" value="${r.kwh||''}" placeholder="0" onchange="upd(${i})"></td>
+      <td><input type="number" id="p${i}" value="${r.peak||''}" placeholder="auto" onchange="upd(${i})"></td>
+      <td><input type="number" id="o${i}" value="${r.offpeak||''}" placeholder="auto" onchange="upd(${i})"></td>
+      <td><input type="number" id="s${i}" value="${r.std||''}" placeholder="auto" onchange="upd(${i})"></td>
+      <td><input type="number" id="d${i}" value="${r.demand||''}" placeholder="0" onchange="upd(${i})"></td>
+      <td><input type="number" id="t${i}" value="${r.total||''}" placeholder="0" onchange="upd(${i})"></td>
+      <td><input type="text" id="n${i}" value="${r.notes||''}" placeholder="Optional"></td>
+    </tr>`;
+  });
+}
+function upd(i){
+  bills[i]={month:bills[i].month,
+    kwh:+document.getElementById('k'+i).value||0,
+    peak:+document.getElementById('p'+i).value||0,
+    offpeak:+document.getElementById('o'+i).value||0,
+    std:+document.getElementById('s'+i).value||0,
+    demand:+document.getElementById('d'+i).value||0,
+    total:+document.getElementById('t'+i).value||0,
+    notes:document.getElementById('n'+i).value||''};
+}
+
+function loadSample(){
+  document.getElementById('cName').value='Sample Industrial Client';
+  document.getElementById('cSite').value='Main Factory — Cape Town';
+  const s=[
+    {kwh:18500,peak:7200,offpeak:6800,std:4500,demand:185,total:52400},
+    {kwh:16800,peak:6500,offpeak:6300,std:4000,demand:172,total:47200},
+    {kwh:15200,peak:5800,offpeak:5900,std:3500,demand:158,total:42800},
+    {kwh:14100,peak:5200,offpeak:5500,std:3400,demand:145,total:39600},
+    {kwh:15800,peak:6200,offpeak:5800,std:3800,demand:162,total:44500},
+    {kwh:17200,peak:6800,offpeak:6400,std:4000,demand:175,total:48400},
+    {kwh:19100,peak:7500,offpeak:7000,std:4600,demand:192,total:53800},
+    {kwh:18400,peak:7100,offpeak:6900,std:4400,demand:188,total:51700},
+    {kwh:16900,peak:6600,offpeak:6200,std:4100,demand:170,total:47500},
+    {kwh:17600,peak:6900,offpeak:6500,std:4200,demand:178,total:49500},
+    {kwh:18200,peak:7000,offpeak:6700,std:4500,demand:183,total:51200},
+    {kwh:19800,peak:7800,offpeak:7200,std:4800,demand:198,total:55700}
+  ];
+  s.forEach((r,i)=>{
+    bills[i]={...bills[i],...r};
+    ['k','p','o','s','d','t'].forEach((f,fi)=>{
+      const keys=['kwh','peak','offpeak','std','demand','total'];
+      const el=document.getElementById(f+i);
+      if(el) el.value=r[keys[fi]]||'';
+    });
+  });
+}
+
+// TARIFF
+function refreshTariffs(){
+  const sup=document.getElementById('supplier').value;
+  const vol=document.getElementById('voltage').value;
+  const opts=(TARIFFS[sup]&&TARIFFS[sup][vol])||[];
+  const c=document.getElementById('tariffOpts'); c.innerHTML='';
+  opts.forEach(t=>{
+    const d=document.createElement('div');
+    d.className='tariff-opt'+(tariff&&tariff.id===t.id?' sel':'');
+    d.innerHTML=`<h4>${t.name} <span class="badge-sm ${t.type==='tou'?'b-gold':'b-blue'}">${t.type.toUpperCase()}</span></h4><p>${t.desc}</p>`;
+    d.onclick=()=>selTariff(t,d);
+    c.appendChild(d);
+  });
+  if(opts.length) selTariff(opts[Math.min(opts.length-1,1)],c.children[Math.min(opts.length-1,1)]);
+}
+
+function selTariff(t,el){
+  tariff=t;
+  document.querySelectorAll('.tariff-opt').forEach(d=>d.classList.remove('sel'));
+  if(el) el.classList.add('sel');
+  showTariffRates(t);
+}
+
+function showTariffRates(t){
+  if(!t){document.getElementById('tariffRates').innerHTML='<p style="color:var(--text-muted);font-size:13px">Select a tariff</p>';return;}
+  let h=`<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px">`;
+  const row=(n,v)=>`<div class="trow"><span style="color:var(--text-muted)">${n}</span><span class="tval">${v}</span></div>`;
+  h+=row('Tariff',t.name)+row('Type',t.type.toUpperCase());
+  if(t.type==='tou'){h+=row('Peak',`R ${t.peak.toFixed(2)}/kWh`)+row('Off-Peak',`R ${t.offpeak.toFixed(2)}/kWh`)+row('Standard',`R ${t.standard.toFixed(2)}/kWh`)+row('Peak Hours',t.phours||'');}
+  else if(t.type==='flat') h+=row('Flat Rate',`R ${t.flat.toFixed(2)}/kWh`);
+  if(t.demand) h+=row('Demand Charge',`R ${t.demand}/kVA`);
+  if(t.fixed) h+=row('Network/Fixed',`R ${t.fixed}/month`);
+  h+=row('Escalation',`${t.esc}% p.a.`);
+  h+='</div>';
+  document.getElementById('tariffRates').innerHTML=h;
+}
+
+function applyCustom(){
+  const p=+document.getElementById('cPeak').value,o=+document.getElementById('cOffpeak').value,s=+document.getElementById('cStd').value;
+  if(p||o||s){
+    tariff={id:'custom',name:'Custom Tariff',type:p&&o?'tou':'flat',peak:p||s,offpeak:o||s*0.55,standard:s||p,flat:s||p,
+      demand:+document.getElementById('demChg').value||0,fixed:+document.getElementById('netChg').value||0,
+      esc:+document.getElementById('esc').value||12,phours:'As configured',tw:{peak:[[7,9],[17,21]],offpeak:[[22,6]],std:[[9,17],[21,22]]}};
+    showTariffRates(tariff);
+    alert('Custom tariff applied.');
+  }
+}
+
+// ANALYSIS
+function runAnalysis(){
+  const tot=bills.reduce((s,r)=>s+r.kwh,0);
+  if(!tot){alert('Please enter electricity data first.');return;}
+  bills.forEach(r=>{
+    if(r.kwh>0&&r.peak===0&&r.offpeak===0){
+      r.peak=Math.round(r.kwh*0.38); r.offpeak=Math.round(r.kwh*0.35); r.std=r.kwh-r.peak-r.offpeak;
+    }
+  });
+  const totalCost=bills.reduce((s,r)=>s+r.total,0);
+  const avgR=totalCost/tot;
+  const maxD=Math.max(...bills.map(r=>r.demand));
+  const totPeak=bills.reduce((s,r)=>s+r.peak,0);
+  const totOP=bills.reduce((s,r)=>s+r.offpeak,0);
+  analysis={tot,totalCost,daily:tot/365,monthly:tot/12,avgR,maxD,peakPct:Math.round(totPeak/tot*100),opPct:Math.round(totOP/tot*100)};
+  document.getElementById('statsRow').innerHTML=`
+    <div class="stat-card"><div class="stat-lbl">Annual Consumption</div><div class="stat-val blue">${fmt(tot)}</div><div class="stat-lbl">kWh / year</div></div>
+    <div class="stat-card"><div class="stat-lbl">Annual Electricity Cost</div><div class="stat-val gold">R ${fmtR(totalCost)}</div><div class="stat-lbl">/ year</div></div>
+    <div class="stat-card"><div class="stat-lbl">Blended Rate</div><div class="stat-val" style="color:var(--text)">${avgR.toFixed(2)}</div><div class="stat-lbl">per kWh</div></div>
+    <div class="stat-card"><div class="stat-lbl">Peak Share</div><div class="stat-val red">${analysis.peakPct}%</div><div class="stat-lbl">during peak hours</div></div>
+  `;
+  drawCharts(); go('analysis'); buildRecs(); buildBatt(); calcWheel();
+}
+
+function drawCharts(){
+  const kwh=bills.map(r=>r.kwh), cost=bills.map(r=>r.total);
+  const pk=bills.map(r=>r.peak), op=bills.map(r=>r.offpeak), st=bills.map(r=>Math.max(0,r.kwh-r.peak-r.offpeak));
+  const rates=bills.map(r=>r.kwh>0?(r.total/r.kwh).toFixed(2):0);
+  mkChart('cChart','bar',MO,[{label:'kWh',data:kwh,backgroundColor:'rgba(30,144,255,0.7)',borderRadius:4}]);
+  mkChart('costChart','bar',MO,[{label:'R',data:cost,backgroundColor:'rgba(240,165,0,0.7)',borderRadius:4}]);
+  mkChart('touChart','bar',MO,[
+    {label:'Peak',data:pk,backgroundColor:'rgba(255,68,68,0.75)',borderRadius:2},
+    {label:'Off-Peak',data:op,backgroundColor:'rgba(0,200,83,0.65)',borderRadius:2},
+    {label:'Standard',data:st,backgroundColor:'rgba(30,144,255,0.55)',borderRadius:2}
+  ],true);
+  mkChart('rateChart','line',MO,[{label:'R/kWh',data:rates,borderColor:'#f0a500',backgroundColor:'rgba(240,165,0,0.1)',tension:0.4,fill:true}]);
+}
+
+function mkChart(id,type,labels,datasets,stacked=false){
+  const ctx=document.getElementById(id); if(!ctx)return;
+  if(charts[id])charts[id].destroy();
+  charts[id]=new Chart(ctx,{type,data:{labels,datasets},options:{responsive:true,
+    plugins:{legend:{labels:{color:'#8fa8c8',font:{size:11}}}},
+    scales:{x:{stacked,grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8fa8c8'}},
+             y:{stacked,grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8fa8c8'}}}}});
+}
+
+// RECOMMENDATIONS
+function buildRecs(){
+  if(!analysis){runAnalysis();return;}
+  const psh=+document.getElementById('psh').value||5.2, derate=+document.getElementById('derate').value||0.8;
+  const pWatt=+document.getElementById('pWatt').value||600, rpwp=+document.getElementById('rpwp').value||10;
+  const feedin=+document.getElementById('feedin').value||1.50, life=+document.getElementById('life').value||25;
+  const escPct=(tariff?tariff.esc:12)/100, wacc=(+document.getElementById('wacc').value||10)/100;
+  const t=tariff, avgR=t?(t.type==='tou'?(t.peak*0.38+t.offpeak*0.35+t.standard*0.27):(t.flat||t.peak||2.5)):analysis.avgR;
+  const daily=analysis.daily;
+  const opts=[{lbl:'Essential',pct:50,cls:'b-blue'},{lbl:'Optimal',pct:80,cls:'b-gold',best:true},{lbl:'Maximum',pct:100,cls:'b-green'}];
+  let html='';
+  let optKwp=0, optSav=0, optCost=0;
+  opts.forEach(opt=>{
+    const kwp=Math.ceil((daily*opt.pct/100/(psh*derate))*10)/10;
+    const panels=Math.ceil(kwp*1000/pWatt);
+    const annGen=kwp*psh*derate*365;
+    const cost=kwp*1000*rpwp;
+    const saving=Math.min(annGen,analysis.tot)*avgR;
+    const export_=Math.max(0,annGen-analysis.tot)*feedin;
+    const total=saving+export_;
+    const payback=total>0?cost/total:99;
+    const npv=calcNPV(cost,total,escPct,wacc,life);
+    if(opt.pct===80){optKwp=kwp;optSav=total;optCost=cost;}
+    html+=`<div class="rec-card ${opt.best?'best':''}">
+      <div class="rec-title">${opt.lbl} <span class="badge-sm ${opt.cls}">${opt.pct}% offset</span></div>
+      <div class="rec-size">${kwp.toFixed(1)} kWp</div>
+      <div class="rec-items">
+        ☀️ ${panels} × ${pWatt}Wp panels<br>
+        ⚡ ~${fmt(Math.round(annGen))} kWh/year generated<br>
+        📤 ~${fmt(Math.round(Math.max(0,annGen-analysis.tot)))} kWh exportable/yr<br>
+        💰 Installed cost: R ${fmtR(cost)}
+      </div>
+      <div class="rec-sav">R ${fmtR(Math.round(total))}/yr</div>
+      <div class="rec-pay">estimated savings | payback ${payback.toFixed(1)} yrs | NPV R ${fmtR(Math.round(npv))}</div>
+      <div style="margin-top:10px">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">Payback vs ${life}yr life</div>
+        <div class="prog"><div class="prog-fill" style="width:${Math.min(100,payback/life*100).toFixed(0)}%;background:${opt.best?'var(--gold)':'var(--blue)'}"></div></div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('recCards').innerHTML=html;
+  document.getElementById('recAlert').innerHTML=`✅ Analysis complete. Optimal system: <strong>${optKwp} kWp solar</strong> — estimated R ${fmtR(Math.round(optSav))}/yr savings.`;
+  // 25yr chart
+  const yrs=Array.from({length:25},(_,i)=>`Yr ${i+1}`);
+  const cumSav=[], cumNosolar=[];
+  let acc=0, noS=0;
+  for(let y=1;y<=25;y++){
+    acc+=optSav*Math.pow(1+escPct,y-1);
+    noS+=analysis.totalCost*Math.pow(1+escPct,y-1);
+    cumSav.push(Math.round(acc-optCost));
+    cumNosolar.push(Math.round(noS));
+  }
+  if(charts['finChart'])charts['finChart'].destroy();
+  const fc=document.getElementById('finChart');
+  if(fc) charts['finChart']=new Chart(fc,{type:'line',data:{labels:yrs,datasets:[
+    {label:'Cumulative Net Saving (R)',data:cumSav,borderColor:'#00c853',backgroundColor:'rgba(0,200,83,0.08)',fill:true,tension:0.4},
+    {label:'Cost Without Solar (R)',data:cumNosolar,borderColor:'rgba(255,68,68,0.6)',borderDash:[5,5],tension:0.4,fill:false}
+  ]},options:{responsive:true,plugins:{legend:{labels:{color:'#8fa8c8',font:{size:11}}}},
+    scales:{x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8fa8c8',maxTicksLimit:10}},
+             y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8fa8c8',callback:v=>'R '+fmtR(v)}}}}});
+}
+
+function calcNPV(c,a,esc,d,n){let v=-c;for(let y=1;y<=n;y++)v+=a*Math.pow(1+esc,y-1)/Math.pow(1+d,y);return v;}
+
+// BATTERY
+function buildBatt(){
+  if(!analysis)return;
+  const t=tariff, peakR=t?(t.peak||t.flat||analysis.avgR):analysis.avgR;
+  const opR=t?(t.offpeak||t.flat*0.55||analysis.avgR*0.5):analysis.avgR*0.5;
+  const spread=Math.max(0,peakR-opR);
+  const battCostKwh=+document.getElementById('battCostKwh').value||4500;
+  const eff=(+document.getElementById('battEff').value||95)/100;
+  const opts=[{lbl:'Small Buffer',kwh:10,nm:'1× 10kWh LFP'},{lbl:'Arbitrage Optimal',kwh:20,nm:'2× 10kWh LFP',best:true},{lbl:'Large Arbitrage',kwh:40,nm:'4× 10kWh LFP'}];
+  let html='';
+  opts.forEach(opt=>{
+    const usable=opt.kwh*0.8;
+    const dailyPk=analysis.daily*(analysis.peakPct/100);
+    const cycles=Math.min(1,dailyPk/usable);
+    const annArb=usable*cycles*365*spread*eff;
+    const capex=opt.kwh*battCostKwh;
+    const pb=annArb>0?capex/annArb:99;
+    html+=`<div class="rec-card ${opt.best?'best':''}" style="margin-top:16px">
+      <div class="rec-title">🔋 ${opt.lbl}</div>
+      <div class="rec-size">${opt.kwh} kWh</div>
+      <div class="rec-items">${opt.nm}<br>Usable: ${usable} kWh (80% DoD)<br>Chemistry: LFP (preferred)<br>Spread: R ${spread.toFixed(2)}/kWh<br>Daily cycles: ${cycles.toFixed(2)}<br>Capex: R ${fmtR(capex)}</div>
+      <div class="rec-sav">R ${fmtR(Math.round(annArb))}/yr</div>
+      <div class="rec-pay">arbitrage revenue | payback ${pb>20?'>20':pb.toFixed(1)} yrs</div>
+    </div>`;
+  });
+  document.getElementById('battCards').innerHTML=html;
+  const arbData=bills.map(r=>{
+    const usable=20*0.8,dailyPk=r.kwh*0.38/30,cyc=Math.min(1,dailyPk/usable);
+    return Math.round(usable*cyc*30*spread*eff);
+  });
+  if(charts['arbChart'])charts['arbChart'].destroy();
+  const ac=document.getElementById('arbChart');
+  if(ac) charts['arbChart']=new Chart(ac,{type:'bar',data:{labels:MO,datasets:[{label:'Arbitrage Revenue (R)',data:arbData,backgroundColor:'rgba(240,165,0,0.7)',borderRadius:4}]},options:{responsive:true,plugins:{legend:{labels:{color:'#8fa8c8'}}},scales:{x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8fa8c8'}},y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8fa8c8',callback:v=>'R'+v}}}}});
+}
+
+// WHEELING
+function calcWheel(){
+  if(!analysis)return;
+  const psh=+document.getElementById('psh').value||5.2, derate=+document.getElementById('derate').value||0.8;
+  const kwp=Math.ceil((analysis.daily*0.8/(psh*derate))*10)/10;
+  const annGen=kwp*psh*derate*365;
+  const export_=Math.max(0,annGen-analysis.tot);
+  const wR=+document.getElementById('wRate').value||1.50, wN=+document.getElementById('wNet').value||0.35;
+  const net=Math.max(0,wR-wN), annRev=export_*net;
+  const esc=(tariff?tariff.esc:12)/100;
+  let tot25=0; for(let y=1;y<=25;y++) tot25+=annRev*Math.pow(1+esc,y-1);
+  document.getElementById('wKwh').textContent=fmt(Math.round(export_));
+  document.getElementById('wRev').textContent='R '+fmtR(Math.round(annRev));
+  document.getElementById('w25').textContent='R '+fmtR(Math.round(tot25));
+  const yrs=Array.from({length:25},(_,i)=>`Yr ${i+1}`);
+  const wData=yrs.map((_,i)=>Math.round(annRev*Math.pow(1+esc,i)));
+  if(charts['wheelChart'])charts['wheelChart'].destroy();
+  const wc=document.getElementById('wheelChart');
+  if(wc) charts['wheelChart']=new Chart(wc,{type:'bar',data:{labels:yrs,datasets:[{label:'Wheeling Revenue (R)',data:wData,backgroundColor:'rgba(30,144,255,0.65)',borderRadius:3}]},options:{responsive:true,plugins:{legend:{labels:{color:'#8fa8c8'}}},scales:{x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8fa8c8',maxTicksLimit:10}},y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8fa8c8',callback:v=>'R '+fmtR(v)}}}}});
+}
+
+// PROPOSAL
+function genProposal(){
+  if(!analysis){alert('Run analysis first.');return;}
+  const client=document.getElementById('cName').value||'Client';
+  const site=document.getElementById('cSite').value||'Site';
+  const by=document.getElementById('cPrepBy').value||'STS Tech Group';
+  const today=new Date().toLocaleDateString('en-ZA',{year:'numeric',month:'long',day:'numeric'});
+  const t=tariff, avgR=t?(t.type==='tou'?(t.peak*0.38+t.offpeak*0.35+t.standard*0.27):(t.flat||t.peak||2.5)):analysis.avgR;
+  const psh=+document.getElementById('psh').value||5.2, derate=+document.getElementById('derate').value||0.8;
+  const rpwp=+document.getElementById('rpwp').value||10, feedin=+document.getElementById('feedin').value||1.50;
+  const esc=(t?t.esc:12)/100;
+  const kwp=Math.ceil((analysis.daily*0.8/(psh*derate))*10)/10;
+  const panels=Math.ceil(kwp*1000/600), annGen=kwp*psh*derate*365;
+  const costSolar=kwp*1000*rpwp;
+  const solarSav=Math.min(annGen,analysis.tot)*avgR;
+  const battKwh=20, battCapex=battKwh*(+document.getElementById('battCostKwh').value||4500);
+  const peakR=t?(t.peak||t.flat||avgR):avgR, opR=t?(t.offpeak||avgR*0.5):avgR*0.5;
+  const battArb=battKwh*0.8*365*Math.max(0,peakR-opR)*0.95;
+  const wR=+document.getElementById('wRate').value||1.50, wN=+document.getElementById('wNet').value||0.35;
+  const export_=Math.max(0,annGen-analysis.tot), wheelRev=export_*(wR-wN);
+  const totalBenefit=solarSav+battArb+wheelRev;
+  const totalCap=costSolar+battCapex;
+  const payback=totalBenefit>0?totalCap/totalBenefit:0;
+  let tot25=0; for(let y=1;y<=25;y++) tot25+=totalBenefit*Math.pow(1+esc,y-1);
+  const wNotes=document.getElementById('wNotes').value;
+
+  document.getElementById('propOut').innerHTML=`
+  <div class="prop-wrap">
+    <div class="prop-hdr">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px">
+        <div>
+          <div style="font-size:10px;color:#8fa8c8;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">SOLAR & BATTERY PROPOSAL</div>
+          <div style="font-size:26px;font-weight:800;margin-bottom:3px">${client}</div>
+          <div style="font-size:13px;color:#8fa8c8">${site}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:22px;font-weight:800;color:#f0a500">${kwp} kWp Solar + ${battKwh} kWh Battery</div>
+          <div style="font-size:12px;color:#8fa8c8;margin-top:4px">Prepared: ${today} | ${by}</div>
+        </div>
+      </div>
+    </div>
+    <div class="prop-body">
+      <div class="prop-sec"><h3>Executive Summary</h3>
+        <p style="font-size:13px;line-height:1.8;color:#333">Based on 12 months of electricity bills analysed for <strong>${client}</strong>, we recommend a <strong>${kwp} kWp solar PV system</strong> paired with a <strong>${battKwh} kWh LFP battery</strong>. This targets 80% consumption offset and delivers savings via direct solar offset, TOU arbitrage (charge off-peak at R ${(t?t.offpeak||t.flat:avgR).toFixed(2)}/kWh, discharge peak at R ${(t?t.peak||t.flat:avgR).toFixed(2)}/kWh), and wheeling of surplus generation. Estimated total annual benefit: <strong>R ${fmtR(Math.round(totalBenefit))}</strong> with a <strong>${payback.toFixed(1)}-year payback</strong>.</p>
+      </div>
+      <div class="prop-sec"><h3>Current Electricity Profile</h3>
+        <div class="prop-grid">
+          <div class="pstat"><div class="pstat-v">${fmt(analysis.tot)}</div><div class="pstat-l">Annual kWh</div></div>
+          <div class="pstat"><div class="pstat-v">R ${fmtR(analysis.totalCost)}</div><div class="pstat-l">Annual Cost</div></div>
+          <div class="pstat"><div class="pstat-v">R ${analysis.avgR.toFixed(2)}</div><div class="pstat-l">Blended Rate/kWh</div></div>
+          <div class="pstat"><div class="pstat-v">${t?t.name:'TOU'}</div><div class="pstat-l">Tariff Structure</div></div>
+        </div>
+      </div>
+      <div class="prop-sec"><h3>Proposed System</h3>
+        <p style="font-size:13px;line-height:2;color:#333">
+          <strong>Solar PV:</strong> ${kwp} kWp DC — ${panels} × 600Wp monocrystalline panels<br>
+          <strong>Battery:</strong> ${battKwh} kWh LFP — 2× 10kWh modules (preferred: LFP for safety & cycle life)<br>
+          <strong>Inverter:</strong> Victron MultiPlus-II (preferred platform)<br>
+          <strong>Annual Generation:</strong> ~${fmt(Math.round(annGen))} kWh/year<br>
+          <strong>Strategy:</strong> Self-consumption + TOU arbitrage + wheeling of surplus
+        </p>
+      </div>
+      <div class="prop-sec"><h3>Financial Benefits</h3>
+        <div class="prop-grid">
+          <div class="pstat"><div class="pstat-v" style="color:#0a7a3e">R ${fmtR(Math.round(solarSav))}</div><div class="pstat-l">Annual Solar Savings</div></div>
+          <div class="pstat"><div class="pstat-v" style="color:#0a7a3e">R ${fmtR(Math.round(battArb))}</div><div class="pstat-l">Annual Battery Arbitrage</div></div>
+          <div class="pstat"><div class="pstat-v" style="color:#0a7a3e">R ${fmtR(Math.round(wheelRev))}</div><div class="pstat-l">Annual Wheeling Revenue</div></div>
+          <div class="pstat" style="background:#0a1628"><div class="pstat-v" style="color:#f0a500">R ${fmtR(Math.round(totalBenefit))}</div><div class="pstat-l" style="color:#8fa8c8">Total Annual Benefit</div></div>
+        </div>
+      </div>
+      <div class="prop-sec"><h3>Investment Summary</h3>
+        <p style="font-size:13px;line-height:2;color:#333">
+          <strong>Solar System:</strong> R ${fmtR(Math.round(costSolar))} (at R${rpwp}/Wp)<br>
+          <strong>Battery Storage:</strong> R ${fmtR(battCapex)} (${battKwh} kWh LFP)<br>
+          <strong>Total Investment:</strong> R ${fmtR(Math.round(totalCap))}<br>
+          <strong>Payback Period:</strong> ${payback.toFixed(1)} years<br>
+          <strong>25-Year Net Benefit:</strong> R ${fmtR(Math.round(tot25-totalCap))} (incl. ${(esc*100).toFixed(0)}% annual tariff escalation)<br>
+          <strong>Section 12B:</strong> 50/30/20 depreciation applicable — consult your tax advisor
+        </p>
+      </div>
+      ${wNotes?`<div class="prop-sec"><h3>Wheeling Notes</h3><p style="font-size:13px;line-height:1.8;color:#333">${wNotes}</p></div>`:''}
+      <div class="prop-sec"><h3>Next Steps</h3>
+        <p style="font-size:13px;line-height:2;color:#333">
+          1. Site survey and structural assessment<br>
+          2. SSEG application (CoCT / Eskom)<br>
+          3. Detailed engineering design and final BOQ<br>
+          4. Sign-off and installation schedule<br>
+          5. Commissioning, monitoring onboarding, and handover
+        </p>
+      </div>
+      <div style="margin-top:28px;padding-top:16px;border-top:2px solid #f0a500;display:flex;justify-content:space-between;font-size:10px;color:#999">
+        <span>STS Tech Group | Solar & Battery Advisor | ${today}</span>
+        <span>Prepared by ${by}</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+// NAV
+const PAGES=['bills','tariff','analysis','recs','battery','wheeling','proposal'];
+function go(id){
+  PAGES.forEach(p=>{
+    document.getElementById('pg-'+p).classList.toggle('active',p===id);
+    document.querySelectorAll('.tab')[PAGES.indexOf(p)].classList.toggle('active',p===id);
+  });
+  if(id==='wheeling')calcWheel();
+  if(id==='battery')buildBatt();
+}
+
+function fmt(n){return n.toLocaleString('en-ZA');}
+function fmtR(n){if(n>=1e6)return(n/1e6).toFixed(2)+'M';if(n>=1000)return(n/1000).toFixed(0)+'k';return n.toLocaleString('en-ZA');}
+
+window.addEventListener('load',()=>{initBills();refreshTariffs();});
+</script>
+</body>
+</html>
