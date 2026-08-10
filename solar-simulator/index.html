@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solar System Simulation Tool | South Africa</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">☀️</div>
+    <div>
+      <h1>Solar System Simulation Tool</h1>
+      <p>South African market — generation, sizing, loadshedding backup &amp; SSEG</p>
+    </div>
+  </div>
+  <span class="badge">PVGIS · Eskom / Municipal · NRS 097-2-1</span>
+</header>
+
+<div class="main">
+<div class="layout">
+
+  <!-- ============================= INPUTS ============================= -->
+  <div class="inputs">
+
+    <!-- 1. LOCATION & PRODUCTION -->
+    <div class="card">
+      <div class="card-title">📍 1 · Location &amp; Solar Production</div>
+      <div class="field">
+        <label>Region (sets default Peak Sun Hours)</label>
+        <select id="region"></select>
+      </div>
+      <div class="field">
+        <label>Peak Sun Hours <span class="range-val" id="pshVal">5.2 h</span></label>
+        <input type="range" id="psh" min="3.5" max="6" step="0.1" value="5.2">
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Tilt <span class="range-val" id="tiltVal">30°</span></label>
+          <input type="range" id="tilt" min="0" max="60" step="1" value="30">
+        </div>
+        <div class="field">
+          <label>Azimuth off-North <span class="range-val" id="azVal">0°</span></label>
+          <input type="range" id="azimuth" min="-90" max="90" step="5" value="0">
+        </div>
+      </div>
+      <div class="field">
+        <label>Performance Ratio (PR) <span class="range-val" id="prVal">78%</span></label>
+        <input type="range" id="pr" min="70" max="85" step="1" value="78">
+      </div>
+      <button class="btn btn-outline btn-sm" id="pvgisBtn" style="width:100%">🌐 Fetch live irradiance (PVGIS)</button>
+      <div class="footnote" id="pvgisNote">Panels assumed North-facing at 25–30° tilt. Live fetch uses lat/lon of the selected region; falls back to the regional average if the API is unreachable.</div>
+    </div>
+
+    <!-- 2. LOAD PROFILE -->
+    <div class="card">
+      <div class="card-title">🏠 2 · Building Load Profile</div>
+      <div class="field">
+        <label>Load type</label>
+        <div class="toggle-row" id="loadTypeToggle">
+          <div class="toggle on" data-val="residential">🏠 Residential</div>
+          <div class="toggle" data-val="commercial">🏢 Commercial</div>
+        </div>
+        <div class="footnote" id="loadTypeNote">Residential: morning geyser + evening cooking peaks.</div>
+      </div>
+      <div class="field">
+        <label>Consumption input</label>
+        <div class="toggle-row" id="consModeToggle">
+          <div class="toggle on" data-val="kwh">Daily kWh</div>
+          <div class="toggle" data-val="bill">Monthly bill (R)</div>
+        </div>
+      </div>
+      <div class="field" id="kwhField">
+        <label>Average daily consumption (kWh/day)</label>
+        <input type="number" id="dailyKwh" value="30" step="1" min="0">
+      </div>
+      <div class="field" id="billField" style="display:none">
+        <label>Average monthly bill (ZAR)</label>
+        <input type="number" id="monthlyBill" value="3200" step="50" min="0">
+      </div>
+      <div class="field">
+        <label>Peak demand (kW) — blank = auto-estimate</label>
+        <input type="number" id="peakLoadKw" placeholder="auto" step="0.5" min="0">
+      </div>
+    </div>
+
+    <!-- 3. BATTERY / LOADSHEDDING -->
+    <div class="card">
+      <div class="card-title">🔋 3 · Battery &amp; Loadshedding</div>
+      <div class="field">
+        <label>Sizing basis</label>
+        <div class="toggle-row" id="backupModeToggle">
+          <div class="toggle on" data-val="hours">Target backup hrs</div>
+          <div class="toggle" data-val="stage">Loadshedding stage</div>
+        </div>
+      </div>
+      <div class="field" id="hoursField">
+        <label>Target backup hours <span class="range-val" id="bhVal">3.0 h</span></label>
+        <input type="range" id="backupHours" min="1" max="8" step="0.5" value="3">
+      </div>
+      <div class="field" id="stageField" style="display:none">
+        <label>Loadshedding stage</label>
+        <select id="loadsheddingStage">
+          <option value="1">Stage 1</option><option value="2">Stage 2</option>
+          <option value="3">Stage 3</option><option value="4" selected>Stage 4</option>
+          <option value="5">Stage 5</option><option value="6">Stage 6</option>
+          <option value="7">Stage 7</option><option value="8">Stage 8</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Backup load (kW) — blank = cover peak</label>
+        <input type="number" id="backupLoadKw" placeholder="auto (peak)" step="0.5" min="0">
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Depth of Discharge <span class="range-val" id="dodVal">90%</span></label>
+          <input type="range" id="dod" min="80" max="100" step="1" value="90">
+        </div>
+        <div class="field">
+          <label>Offset target <span class="range-val" id="offVal">80%</span></label>
+          <input type="range" id="offsetTarget" min="30" max="120" step="5" value="80">
+        </div>
+      </div>
+      <div class="footnote">Default chemistry: LiFePO4 (LFP), 90% DoD, 0.5C continuous discharge.</div>
+    </div>
+
+    <!-- 4. FINANCIAL / SSEG -->
+    <div class="card">
+      <div class="card-title">💰 4 · Financial &amp; SSEG</div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Tariff (R/kWh)</label>
+          <input type="number" id="tariff" value="3.50" step="0.05" min="0">
+        </div>
+        <div class="field">
+          <label>Escalation (%/yr)</label>
+          <input type="number" id="escalation" value="12" step="0.5" min="0">
+        </div>
+      </div>
+      <div class="field">
+        <label>Grid connection</label>
+        <div class="toggle-row" id="phaseToggle">
+          <div class="toggle on" data-val="single">Single-phase (60A)</div>
+          <div class="toggle" data-val="three">Three-phase</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Export to grid (SSEG)</label>
+        <div class="toggle-row" id="exportToggle">
+          <div class="toggle" data-val="off">Export OFF</div>
+          <div class="toggle on" data-val="on">Export ON</div>
+        </div>
+      </div>
+      <div class="field" id="feedInField">
+        <label>Feed-in tariff (R/kWh)</label>
+        <input type="number" id="feedInTariff" value="0.90" step="0.05" min="0">
+      </div>
+      <details>
+        <summary class="muted" style="cursor:pointer;margin-bottom:8px">Advanced cost assumptions</summary>
+        <div class="grid-2" style="margin-top:8px">
+          <div class="field"><label>PV (R/Wp)</label><input type="number" id="costPerWp" value="12" step="0.5"></div>
+          <div class="field"><label>Battery (R/kWh)</label><input type="number" id="batteryCostPerKwh" value="6500" step="100"></div>
+          <div class="field"><label>Inverter (R/kVA)</label><input type="number" id="inverterCostPerKva" value="3500" step="100"></div>
+          <div class="field"><label>Fixed / install (R)</label><input type="number" id="fixedCost" value="15000" step="500"></div>
+        </div>
+      </details>
+      <button class="btn btn-primary" id="runBtn" style="margin-top:6px">⚡ Run Simulation</button>
+    </div>
+
+  </div>
+
+  <!-- ============================= RESULTS ============================= -->
+  <div class="results">
+    <div id="resultsBody">
+      <div class="placeholder card">
+        <div class="big">☀️🔋</div>
+        <div>Configure the system on the left and press <strong>Run Simulation</strong>.</div>
+        <div class="muted" style="margin-top:8px">The tool sizes PV, inverter and battery, then models savings, payback and ROI for South African conditions.</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /layout -->
+</div><!-- /main -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="simulation.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
