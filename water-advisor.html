@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Water Security Advisor | STS Tech Group</title>
+<style>
+  :root {
+    --navy: #06131f; --navy-mid: #0b2233; --navy-light: #12405a;
+    --aqua: #00c2e0; --aqua-light: #4de3ff; --teal: #00a896; --gold: #f0a500; --gold-light: #ffc94d;
+    --green: #00c853; --red: #ff4444; --text: #e6f4f8; --text-muted: #8bb0c0;
+    --card: rgba(255,255,255,0.04); --border: rgba(255,255,255,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--navy); color: var(--text); min-height: 100vh; }
+  header { background: linear-gradient(135deg,var(--navy-mid),var(--navy-light)); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg,var(--aqua),var(--teal)); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .logo h1 { font-size: 16px; font-weight: 700; }
+  .logo p { font-size: 11px; color: var(--text-muted); }
+  .badge { background: rgba(0,194,224,0.15); border: 1px solid var(--aqua); color: var(--aqua); padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .tabs { display: flex; background: var(--navy-mid); border-bottom: 1px solid var(--border); padding: 0 24px; gap: 2px; overflow-x: auto; }
+  .tab { padding: 12px 16px; cursor: pointer; font-size: 12px; color: var(--text-muted); border-bottom: 2px solid transparent; white-space: nowrap; transition: all 0.2s; }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--aqua); border-bottom-color: var(--aqua); }
+  .main { padding: 24px; max-width: 1400px; margin: 0 auto; }
+  .page { display: none; }
+  .page.active { display: block; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+  .card-title { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
+  label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 5px; }
+  input, select, textarea { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 7px; padding: 9px 12px; color: var(--text); font-size: 13px; outline: none; transition: border 0.2s; }
+  input:focus, select:focus { border-color: var(--aqua); }
+  select option { background: var(--navy-mid); }
+  .btn { padding: 9px 20px; border-radius: 7px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; }
+  .btn-primary { background: var(--aqua); color: var(--navy); }
+  .btn-primary:hover { background: var(--aqua-light); }
+  .btn-gold { background: var(--gold); color: var(--navy); }
+  .btn-gold:hover { background: var(--gold-light); }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
+  .btn-outline:hover { border-color: var(--aqua); color: var(--aqua); }
+  .btn-sm { padding: 6px 14px; font-size: 12px; }
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+  .sec-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
+  .sec-title { font-size: 18px; font-weight: 700; }
+  .sec-sub { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+  .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 18px; text-align: center; }
+  .stat-val { font-size: 26px; font-weight: 700; margin: 6px 0 3px; }
+  .stat-lbl { font-size: 11px; color: var(--text-muted); }
+  .aqua { color: var(--aqua); } .gold { color: var(--gold); } .green { color: var(--green); } .red { color: var(--red); } .teal { color: var(--teal); }
+  .alert { border-radius: 8px; padding: 10px 14px; font-size: 12px; margin-bottom: 14px; line-height: 1.6; }
+  .alert-info { background: rgba(0,194,224,0.1); border-left: 3px solid var(--aqua); }
+  .alert-warning { background: rgba(240,165,0,0.1); border-left: 3px solid var(--gold); }
+  .alert-success { background: rgba(0,200,83,0.1); border-left: 3px solid var(--green); }
+  .bill-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .bill-table th { background: rgba(255,255,255,0.05); padding: 9px 12px; text-align: left; font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; }
+  .bill-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
+  .bill-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .bill-table input { padding: 5px 8px; font-size: 12px; }
+  .tariff-opt { border: 2px solid var(--border); border-radius: 10px; padding: 14px; cursor: pointer; transition: all 0.2s; }
+  .tariff-opt:hover { border-color: var(--aqua); }
+  .tariff-opt.sel { border-color: var(--gold); background: rgba(240,165,0,0.05); }
+  .tariff-opt h4 { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+  .tariff-opt p { font-size: 11px; color: var(--text-muted); }
+  .trow { display: flex; justify-content: space-between; padding: 5px 0; font-size: 12px; border-bottom: 1px solid var(--border); }
+  .trow:last-child { border: none; }
+  .tval { font-weight: 600; color: var(--aqua); }
+  .rec-card { border: 2px solid var(--border); border-radius: 12px; padding: 20px; position: relative; transition: all 0.2s; }
+  .rec-card:hover { border-color: var(--aqua); transform: translateY(-2px); }
+  .rec-card.best { border-color: var(--gold); }
+  .rec-card.best::before { content: '★ RECOMMENDED'; position: absolute; top: -11px; left: 50%; transform: translateX(-50%); background: var(--gold); color: var(--navy); padding: 2px 12px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+  .rec-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .rec-size { font-size: 26px; font-weight: 800; color: var(--aqua); margin: 8px 0; }
+  .rec-items { font-size: 12px; color: var(--text-muted); line-height: 1.9; }
+  .rec-sav { font-size: 20px; font-weight: 700; color: var(--green); margin: 10px 0 3px; }
+  .rec-pay { font-size: 11px; color: var(--text-muted); }
+  .prog { background: rgba(255,255,255,0.07); border-radius: 4px; height: 6px; margin: 8px 0; overflow: hidden; }
+  .prog-fill { height: 100%; border-radius: 4px; }
+  .badge-sm { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 600; }
+  .b-aqua { background: rgba(0,194,224,0.2); color: var(--aqua-light); }
+  .b-gold { background: rgba(240,165,0,0.2); color: var(--gold); }
+  .b-green { background: rgba(0,200,83,0.2); color: var(--green); }
+  .b-red { background: rgba(255,68,68,0.2); color: #ff8888; }
+  .wbox { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px; text-align: center; }
+  .wbox .wv { font-size: 18px; font-weight: 700; color: var(--aqua); }
+  .wbox .wl { font-size: 10px; color: var(--text-muted); margin-top: 3px; }
+  .step-bar { display: flex; height: 26px; border-radius: 6px; overflow: hidden; margin: 10px 0 6px; border: 1px solid var(--border); }
+  .step-seg { display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: var(--navy); }
+  .chk { display: flex; align-items: center; gap: 8px; padding: 8px 0; font-size: 12px; border-bottom: 1px solid var(--border); }
+  .chk input { width: auto; }
+  .prop-wrap { background: white; color: #1a1a1a; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+  .prop-hdr { background: linear-gradient(135deg,#06131f,#12405a); color: white; padding: 32px 36px; }
+  .prop-body { padding: 32px 36px; }
+  .prop-sec { margin-bottom: 24px; }
+  .prop-sec h3 { font-size: 12px; font-weight: 700; color: #06131f; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid var(--aqua); padding-bottom: 5px; margin-bottom: 12px; }
+  .prop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .pstat { background: #f4f9fb; border-radius: 8px; padding: 12px; text-align: center; }
+  .pstat-v { font-size: 20px; font-weight: 700; color: #06131f; }
+  .pstat-l { font-size: 10px; color: #666; margin-top: 2px; }
+  .prop-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .prop-table th { background: #eef5f8; padding: 8px 10px; text-align: left; font-size: 10px; text-transform: uppercase; color: #445; }
+  .prop-table td { padding: 7px 10px; border-bottom: 1px solid #e4ecf0; }
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+  @media(max-width:768px) { .main{padding:12px;} .grid-2,.grid-3,.grid-4{grid-template-columns:1fr;} }
+  @media print { header,.tabs,.btn,.btn-row{display:none!important;} body{background:white;} .main{padding:0;} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">💧</div>
+    <div><h1>Water Security Advisor</h1><p>STS Tech Group — Alternative Supply & Resilience Analysis</p></div>
+  </div>
+  <span class="badge">CoCT Water &amp; Sanitation 2024/25</span>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="go('usage')">📄 Usage Input</div>
+  <div class="tab" onclick="go('tariff')">🏷️ Tariff Setup</div>
+  <div class="tab" onclick="go('analysis')">📊 Analysis</div>
+  <div class="tab" onclick="go('rain')">🌧️ Rainwater</div>
+  <div class="tab" onclick="go('bore')">🕳️ Borehole</div>
+  <div class="tab" onclick="go('grey')">♻️ Greywater &amp; Efficiency</div>
+  <div class="tab" onclick="go('recs')">💧 Recommendations</div>
+  <div class="tab" onclick="go('resilience')">🛡️ Resilience</div>
+  <div class="tab" onclick="go('proposal')">📋 Proposal</div>
+</div>
+
+<div class="main">
+
+<!-- USAGE -->
+<div id="pg-usage" class="page active">
+  <div class="sec-header">
+    <div><div class="sec-title">📄 12-Month Water Usage Input</div><div class="sec-sub">Enter metered consumption and billed amounts month by month</div></div>
+    <div class="btn-row" style="margin:0">
+      <button class="btn btn-outline btn-sm" onclick="loadSample()">Load Sample Data</button>
+      <button class="btn btn-primary btn-sm" onclick="runAnalysis()">Analyse →</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Client Information</div>
+    <div class="grid-3">
+      <div><label>Client Name</label><input id="cName" placeholder="e.g. Bergview Estate Body Corporate"></div>
+      <div><label>Property / Site</label><input id="cSite" placeholder="e.g. 14 Vineyard Rd, Claremont"></div>
+      <div><label>Prepared By</label><input id="cPrepBy" value="Jay Stevens — STS Tech Group"></div>
+    </div>
+    <div class="grid-4" style="margin-top:12px">
+      <div><label>Property Type</label>
+        <select id="pType" onchange="buildRecs()">
+          <option value="dom">Domestic — Single Residential</option>
+          <option value="cluster">Sectional Title / Body Corporate</option>
+          <option value="com">Commercial / Industrial</option>
+          <option value="agri">Agricultural / Smallholding</option>
+        </select>
+      </div>
+      <div><label>Occupants / Staff</label><input type="number" id="occ" value="4"></div>
+      <div><label>Erf Size (m²)</label><input type="number" id="erf" value="800"></div>
+      <div><label>Irrigated Garden (m²)</label><input type="number" id="garden" value="250"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Monthly Consumption &amp; Cost</div>
+    <div class="alert alert-info">ℹ️ <strong>Kilolitres (kl) is the only required field</strong> — the tool reconstructs your billed cost from the selected tariff. Enter the actual billed Water (R) and Sanitation (R) to reconcile against the real municipal account and catch meter or billing errors.</div>
+    <div style="overflow-x:auto">
+      <table class="bill-table"><thead><tr>
+        <th>Month</th><th>Water Used (kl)</th><th>Billed Water (R)</th><th>Billed Sanitation (R)</th><th>Total Bill (R)</th><th>Notes</th>
+      </tr></thead><tbody id="useBody"></tbody></table>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Leak &amp; Anomaly Screening</div>
+    <div id="leakOut"><p style="color:var(--text-muted);font-size:13px">Run analysis to screen for continuous-flow leaks and billing anomalies.</p></div>
+  </div>
+</div>
+
+<!-- TARIFF -->
+<div id="pg-tariff" class="page">
+  <div class="sec-header"><div><div class="sec-title">🏷️ Tariff Configuration</div><div class="sec-sub">Stepped block tariffs — the step structure is what makes alternative supply pay</div></div></div>
+  <div class="alert alert-warning">⚠️ <strong>Verify rates before issuing a proposal.</strong> Preset rates are indicative 2024/25 figures and municipal tariffs are re-gazetted each July. Confirm against the client's latest account or the municipality's published schedule, then use the Custom Override below.</div>
+  <div class="card">
+    <div class="card-title">Municipality &amp; Customer Category</div>
+    <div class="grid-2" style="margin-bottom:16px">
+      <div><label>Municipality</label>
+        <select id="muni" onchange="refreshTariffs()">
+          <option value="coct">City of Cape Town (CoCT)</option>
+          <option value="stel">Stellenbosch Municipality</option>
+          <option value="other">Other Municipality</option>
+        </select>
+      </div>
+      <div><label>Customer Category</label>
+        <select id="cat" onchange="refreshTariffs()">
+          <option value="dom">Domestic (Full — non-indigent)</option>
+          <option value="cluster">Cluster / Sectional Title</option>
+          <option value="com">Commercial &amp; Industrial</option>
+        </select>
+      </div>
+    </div>
+    <div class="grid-3" id="tariffOpts"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Active Tariff Structure</div>
+    <div id="tariffRates"><p style="color:var(--text-muted);font-size:13px">Select a tariff above</p></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Custom Tariff Override</div>
+    <div class="alert alert-info">ℹ️ Enter the step rates exactly as printed on the client's account. Leave a step blank to keep the preset value. Enter step ceilings in kl/month.</div>
+    <div class="grid-4">
+      <div><label>Step 1 ceiling (kl)</label><input type="number" id="s1c" placeholder="6"></div>
+      <div><label>Step 1 rate (R/kl)</label><input type="number" id="s1r" step="0.01" placeholder="e.g. 30.79"></div>
+      <div><label>Step 2 ceiling (kl)</label><input type="number" id="s2c" placeholder="10.5"></div>
+      <div><label>Step 2 rate (R/kl)</label><input type="number" id="s2r" step="0.01" placeholder="e.g. 43.13"></div>
+    </div>
+    <div class="grid-4" style="margin-top:12px">
+      <div><label>Step 3 ceiling (kl)</label><input type="number" id="s3c" placeholder="35"></div>
+      <div><label>Step 3 rate (R/kl)</label><input type="number" id="s3r" step="0.01" placeholder="e.g. 64.42"></div>
+      <div><label>Step 4 rate (R/kl, above)</label><input type="number" id="s4r" step="0.01" placeholder="e.g. 114.30"></div>
+      <div><label>Sanitation factor (% of water)</label><input type="number" id="sanF" step="1" placeholder="70"></div>
+    </div>
+    <div class="grid-4" style="margin-top:12px">
+      <div><label>Sanitation rate (R/kl, blended)</label><input type="number" id="sanR" step="0.01" placeholder="e.g. 35.00"></div>
+      <div><label>Sanitation cap (kl)</label><input type="number" id="sanCap" placeholder="35"></div>
+      <div><label>Fixed charges (R/month)</label><input type="number" id="fixC" step="0.01" placeholder="e.g. 265"></div>
+      <div><label>Tariff Escalation (%/yr)</label><input type="number" id="esc" value="9" step="0.5"></div>
+    </div>
+    <div class="grid-4" style="margin-top:12px">
+      <div><label>Discount Rate / WACC (%)</label><input type="number" id="wacc" value="10" step="0.5"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="applyCustom()">Apply Custom Tariff</button>
+      <button class="btn btn-outline" onclick="refreshTariffs()">Reset to Preset</button>
+    </div>
+  </div>
+</div>
+
+<!-- ANALYSIS -->
+<div id="pg-analysis" class="page">
+  <div class="sec-header">
+    <div><div class="sec-title">📊 Consumption Analysis</div><div class="sec-sub">Annual pattern, step exposure, and marginal cost of the next kilolitre</div></div>
+    <button class="btn btn-gold" onclick="go('recs')">View Recommendations →</button>
+  </div>
+  <div class="grid-4" id="statsRow"></div>
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">Step Exposure — where your kilolitres are billed</div>
+    <div class="alert alert-info">ℹ️ Alternative supply displaces water from the <strong>top step down</strong>. That is why the marginal rate — not the average rate — sets the value of every kilolitre you no longer buy.</div>
+    <div id="stepBar"></div>
+  </div>
+  <div class="grid-2" style="margin-top:4px">
+    <div class="card"><div class="card-title">Monthly Consumption (kl)</div><canvas id="cChart" height="200"></canvas></div>
+    <div class="card"><div class="card-title">Monthly Cost (R)</div><canvas id="costChart" height="200"></canvas></div>
+  </div>
+  <div class="grid-2" style="margin-top:4px">
+    <div class="card"><div class="card-title">Indoor vs Outdoor Split (estimated)</div><canvas id="splitChart" height="180"></canvas></div>
+    <div class="card"><div class="card-title">Effective vs Marginal Rate (R/kl)</div><canvas id="rateChart" height="180"></canvas></div>
+  </div>
+</div>
+
+<!-- RAINWATER -->
+<div id="pg-rain" class="page">
+  <div class="sec-header">
+    <div><div class="sec-title">🌧️ Rainwater Harvesting</div><div class="sec-sub">Roof catchment yield, tank sizing, and month-by-month storage simulation</div></div>
+    <button class="btn btn-primary btn-sm" onclick="calcRain()">Recalculate</button>
+  </div>
+  <div class="card">
+    <div class="card-title">Catchment &amp; Storage Parameters</div>
+    <div class="grid-4">
+      <div><label>Roof Catchment Area (m²)</label><input type="number" id="roof" value="180" onchange="calcRain()"></div>
+      <div><label>Runoff Coefficient</label><input type="number" id="runoff" value="0.85" step="0.05" onchange="calcRain()"></div>
+      <div><label>First-Flush Loss (mm/event)</label><input type="number" id="flush" value="1.0" step="0.1" onchange="calcRain()"></div>
+      <div><label>Tank Storage (kl)</label><input type="number" id="tank" value="10" onchange="calcRain()"></div>
+    </div>
+    <div class="grid-4" style="margin-top:12px">
+      <div><label>Rainfall Profile</label>
+        <select id="rainReg" onchange="setRainProfile()">
+          <option value="cpt">Cape Town CBD / Atlantic (515mm)</option>
+          <option value="sthn">Southern Suburbs / Newlands (1050mm)</option>
+          <option value="wcoast">West Coast / Blouberg (330mm)</option>
+          <option value="wboland">Winelands / Stellenbosch (720mm)</option>
+          <option value="custom">Custom (edit table below)</option>
+        </select>
+      </div>
+      <div><label>Installed Cost (R/kl storage)</label><input type="number" id="rTankCost" value="2400" onchange="calcRain()"></div>
+      <div><label>Pump, Filtration &amp; Plumbing (R)</label><input type="number" id="rFixCost" value="22000" onchange="calcRain()"></div>
+      <div><label>Annual Maintenance (R)</label><input type="number" id="rMaint" value="1800" onchange="calcRain()"></div>
+    </div>
+    <div class="grid-4" style="margin-top:12px">
+      <div><label>End Use</label>
+        <select id="rUse" onchange="calcRain()">
+          <option value="garden">Garden / Irrigation only</option>
+          <option value="nonpot" selected>Non-potable (garden + toilets + laundry)</option>
+          <option value="pot">Full potable (with UV + filtration)</option>
+        </select>
+      </div>
+      <div><label>System Lifetime (years)</label><input type="number" id="rLife" value="20" onchange="calcRain()"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Monthly Rainfall (mm) — editable</div>
+    <div style="overflow-x:auto"><table class="bill-table"><thead><tr id="rainHead"></tr></thead><tbody><tr id="rainRow"></tr></tbody></table></div>
+  </div>
+  <div class="grid-4" id="rainStats"></div>
+  <div class="grid-2" style="margin-top:16px">
+    <div class="card"><div class="card-title">Yield vs Demand vs Supplied (kl)</div><canvas id="rainChart" height="200"></canvas></div>
+    <div class="card"><div class="card-title">Tank Storage Level (kl)</div><canvas id="tankChart" height="200"></canvas></div>
+  </div>
+  <div class="card"><div class="card-title">Tank Sizing Sensitivity</div><div id="tankSens"></div></div>
+</div>
+
+<!-- BOREHOLE -->
+<div id="pg-bore" class="page">
+  <div class="sec-header">
+    <div><div class="sec-title">🕳️ Borehole &amp; Wellpoint</div><div class="sec-sub">Yield, drilling economics, treatment requirement and payback</div></div>
+    <button class="btn btn-primary btn-sm" onclick="calcBore()">Recalculate</button>
+  </div>
+  <div class="alert alert-warning">⚠️ <strong>Compliance:</strong> boreholes and wellpoints must be registered with the municipality before use, and abstraction may require a water-use licence or General Authorisation from the DWS depending on volume and aquifer. Groundwater in parts of the Cape Flats carries nitrate and iron loads that require treatment before any potable use. Always specify a potability test with the drilling quote.</div>
+  <div class="card">
+    <div class="card-title">Borehole Parameters</div>
+    <div class="grid-4">
+      <div><label>Source Type</label>
+        <select id="bType" onchange="calcBore()">
+          <option value="well">Wellpoint (shallow, 6–12m)</option>
+          <option value="bore" selected>Borehole (drilled, 40–120m)</option>
+        </select>
+      </div>
+      <div><label>Expected Depth (m)</label><input type="number" id="bDepth" value="70" onchange="calcBore()"></div>
+      <div><label>Expected Yield (litres/hour)</label><input type="number" id="bYield" value="1500" onchange="calcBore()"></div>
+      <div><label>Pumping Hours/Day</label><input type="number" id="bHours" value="6" step="0.5" onchange="calcBore()"></div>
+    </div>
+    <div class="grid-4" style="margin-top:12px">
+      <div><label>Drilling Rate (R/m)</label><input type="number" id="bRate" value="850" onchange="calcBore()"></div>
+      <div><label>Casing &amp; Development (R/m)</label><input type="number" id="bCase" value="320" onchange="calcBore()"></div>
+      <div><label>Pump, Control &amp; Plumbing (R)</label><input type="number" id="bPump" value="38000" onchange="calcBore()"></div>
+      <div><label>Siting Survey &amp; Registration (R)</label><input type="number" id="bSurvey" value="9500" onchange="calcBore()"></div>
+    </div>
+    <div class="grid-4" style="margin-top:12px">
+      <div><label>Water Quality / Treatment</label>
+        <select id="bTreat" onchange="calcBore()">
+          <option value="none">Irrigation only — no treatment (R0)</option>
+          <option value="basic" selected>Sediment + carbon filtration (R14 000)</option>
+          <option value="full">Full potable: softener + UV + RO (R62 000)</option>
+        </select>
+      </div>
+      <div><label>Dry-Hole Risk (%)</label><input type="number" id="bRisk" value="20" onchange="calcBore()"></div>
+      <div><label>Pumping Energy (kWh/kl)</label><input type="number" id="bKwh" value="1.2" step="0.1" onchange="calcBore()"></div>
+      <div><label>Electricity Rate (R/kWh)</label><input type="number" id="bElec" value="2.87" step="0.01" onchange="calcBore()"></div>
+    </div>
+    <div class="grid-4" style="margin-top:12px">
+      <div><label>Annual Maintenance (R)</label><input type="number" id="bMaint" value="4500" onchange="calcBore()"></div>
+      <div><label>System Lifetime (years)</label><input type="number" id="bLife" value="25" onchange="calcBore()"></div>
+      <div><label>Sustainable Yield Derate</label><input type="number" id="bDerate" value="0.75" step="0.05" onchange="calcBore()"></div>
+    </div>
+  </div>
+  <div class="grid-4" id="boreStats"></div>
+  <div class="card" style="margin-top:16px"><div class="card-title">Cost Breakdown &amp; Risk-Adjusted Economics</div><div id="boreOut"></div></div>
+  <div class="grid-2">
+    <div class="card"><div class="card-title">Cumulative Cash Flow (R)</div><canvas id="boreChart" height="200"></canvas></div>
+    <div class="card"><div class="card-title">Levelised Cost of Water (R/kl) vs Municipal</div><canvas id="lcowChart" height="200"></canvas></div>
+  </div>
+</div>
+
+<!-- GREYWATER -->
+<div id="pg-grey" class="page">
+  <div class="sec-header">
+    <div><div class="sec-title">♻️ Greywater Reuse &amp; Demand Efficiency</div><div class="sec-sub">The cheapest kilolitre is the one you never draw — always cost this before capital supply</div></div>
+    <button class="btn btn-primary btn-sm" onclick="calcGrey()">Recalculate</button>
+  </div>
+  <div class="alert alert-info">ℹ️ Efficiency retrofits routinely beat borehole and rainwater on rand-per-kilolitre-saved. Price them first; they also shrink the alternative-supply system the client needs to buy.</div>
+  <div class="card">
+    <div class="card-title">Greywater Recovery</div>
+    <div class="grid-4">
+      <div><label>System Type</label>
+        <select id="gType" onchange="calcGrey()">
+          <option value="none">None</option>
+          <option value="direct" selected>Direct diversion to garden (R12 000)</option>
+          <option value="treated">Treated &amp; stored, toilet + garden (R48 000)</option>
+        </select>
+      </div>
+      <div><label>Recoverable Sources (% of indoor)</label><input type="number" id="gPct" value="45" onchange="calcGrey()"></div>
+      <div><label>Reuse Efficiency (%)</label><input type="number" id="gEff" value="80" onchange="calcGrey()"></div>
+      <div><label>Annual Maintenance (R)</label><input type="number" id="gMaint" value="1200" onchange="calcGrey()"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Efficiency Retrofits — select what applies</div>
+    <div id="effList"></div>
+    <div class="btn-row"><button class="btn btn-outline btn-sm" onclick="selectAllEff(true)">Select All</button><button class="btn btn-outline btn-sm" onclick="selectAllEff(false)">Clear</button></div>
+  </div>
+  <div class="grid-4" id="greyStats"></div>
+  <div class="card" style="margin-top:16px"><div class="card-title">Marginal Abatement — cost per kilolitre saved (cheapest first)</div><div id="macOut"></div></div>
+</div>
+
+<!-- RECOMMENDATIONS -->
+<div id="pg-recs" class="page">
+  <div class="sec-header">
+    <div><div class="sec-title">💧 Water Security Packages</div><div class="sec-sub">Three options sized to this property's demand and catchment</div></div>
+    <button class="btn btn-gold" onclick="go('proposal')">Generate Proposal →</button>
+  </div>
+  <div class="alert alert-success" id="recAlert">✅ Run analysis first to generate recommendations.</div>
+  <div class="grid-3" id="recCards"></div>
+  <div class="card" style="margin-top:16px"><div class="card-title">20-Year Cost Comparison — municipal only vs each package</div><canvas id="finChart" height="170"></canvas></div>
+</div>
+
+<!-- RESILIENCE -->
+<div id="pg-resilience" class="page">
+  <div class="sec-header">
+    <div><div class="sec-title">🛡️ Supply Interruption &amp; Restriction Resilience</div><div class="sec-sub">Days of autonomy under restriction levels and total supply failure</div></div>
+    <button class="btn btn-primary btn-sm" onclick="calcResilience()">Recalculate</button>
+  </div>
+  <div class="alert alert-warning">⚠️ Resilience is the argument that closes water deals. Tariff savings alone rarely justify the capex on a low-consumption domestic property — the value is continuity of supply through restrictions, planned shutdowns, reservoir failures and infrastructure outages.</div>
+  <div class="card">
+    <div class="card-title">Scenario Parameters</div>
+    <div class="grid-4">
+      <div><label>Restriction Level</label>
+        <select id="resLevel" onchange="calcResilience()">
+          <option value="0">Normal — no restrictions</option>
+          <option value="3">Level 3 — 105 l/person/day</option>
+          <option value="5" selected>Level 5 — 87 l/person/day</option>
+          <option value="6">Level 6 — 50 l/person/day (Day Zero protocol)</option>
+          <option value="9">Total outage — 25 l/person/day survival</option>
+        </select>
+      </div>
+      <div><label>Municipal Supply Available?</label>
+        <select id="resMuni" onchange="calcResilience()">
+          <option value="1">Yes — restricted volume</option>
+          <option value="0">No — complete interruption</option>
+        </select>
+      </div>
+      <div><label>Interruption Length (days)</label><input type="number" id="resDays" value="14" onchange="calcResilience()"></div>
+      <div><label>Critical Reserve Kept (%)</label><input type="number" id="resReserve" value="15" onchange="calcResilience()"></div>
+    </div>
+  </div>
+  <div class="grid-4" id="resStats"></div>
+  <div class="card" style="margin-top:16px"><div class="card-title">Days of Autonomy by Package</div><div id="resOut"></div></div>
+  <div class="card"><div class="card-title">Storage Drawdown Simulation</div><canvas id="resChart" height="180"></canvas></div>
+</div>
+
+<!-- PROPOSAL -->
+<div id="pg-proposal" class="page">
+  <div class="sec-header">
+    <div><div class="sec-title">📋 Client Proposal</div><div class="sec-sub">Print-ready summary — File → Print → Save as PDF</div></div>
+    <div class="btn-row" style="margin:0">
+      <button class="btn btn-outline btn-sm" onclick="buildProposal()">Refresh</button>
+      <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ Print / Save PDF</button>
+    </div>
+  </div>
+  <div class="card" style="padding:0;background:none;border:none">
+    <div style="margin-bottom:14px"><label>Recommended Package</label>
+      <select id="propPick" onchange="buildProposal()" style="max-width:420px">
+        <option value="0">Package A — Essential</option>
+        <option value="1" selected>Package B — Balanced</option>
+        <option value="2">Package C — Full Independence</option>
+      </select>
+    </div>
+    <div id="propOut"></div>
+  </div>
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+const MO = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+let use = MO.map(m => ({month:m,kl:0,water:0,san:0,total:0,notes:''}));
+let tariff = null, analysis = null, rain = null, bore = null, grey = null, packs = null, charts = {};
+
+/* ---------- TARIFF PRESETS ----------
+   Indicative 2024/25 figures. Municipal tariffs are re-gazetted each July —
+   confirm against the client's account and apply via the Custom Override.   */
+const TARIFFS = {
+  coct: {
+    dom: [
+      {id:'coct_dom', name:'Domestic — Full', desc:'Non-indigent residential, stepped',
+       steps:[{to:6,rate:30.79},{to:10.5,rate:43.13},{to:35,rate:64.42},{to:Infinity,rate:114.30}],
+       sanFactor:0.70, sanCap:35,
+       sanSteps:[{to:4.2,rate:23.45},{to:7.35,rate:31.90},{to:24.5,rate:44.75},{to:Infinity,rate:60.00}],
+       fixed:265, esc:9},
+      {id:'coct_dom_cl', name:'Domestic — Cluster', desc:'Sectional title, per-unit stepped',
+       steps:[{to:6,rate:30.79},{to:10.5,rate:43.13},{to:35,rate:64.42},{to:Infinity,rate:114.30}],
+       sanFactor:0.70, sanCap:35,
+       sanSteps:[{to:4.2,rate:23.45},{to:7.35,rate:31.90},{to:24.5,rate:44.75},{to:Infinity,rate:60.00}],
+       fixed:180, esc:9}
+    ],
+    cluster: [
+      {id:'coct_bc', name:'Body Corporate (bulk)', desc:'Single bulk meter, stepped per unit equivalent',
+       steps:[{to:6,rate:30.79},{to:10.5,rate:43.13},{to:35,rate:64.42},{to:Infinity,rate:114.30}],
+       sanFactor:0.70, sanCap:35,
+       sanSteps:[{to:4.2,rate:23.45},{to:7.35,rate:31.90},{to:24.5,rate:44.75},{to:Infinity,rate:60.00}],
+       fixed:640, esc:9}
+    ],
+    com: [
+      {id:'coct_com', name:'Commercial &amp; Industrial', desc:'Non-stepped volumetric',
+       steps:[{to:Infinity,rate:47.52}],
+       sanFactor:0.95, sanCap:Infinity, sanRate:38.16,
+       fixed:1240, esc:9},
+      {id:'coct_com_mtr', name:'Commercial — Large Meter', desc:'50mm+ connection, higher fixed',
+       steps:[{to:Infinity,rate:47.52}],
+       sanFactor:0.95, sanCap:Infinity, sanRate:38.16,
+       fixed:4850, esc:9}
+    ]
+  },
+  stel: {
+    dom: [
+      {id:'stel_dom', name:'Domestic — Stepped', desc:'Stellenbosch residential',
+       steps:[{to:6,rate:24.50},{to:15,rate:38.20},{to:30,rate:56.80},{to:Infinity,rate:92.40}],
+       sanFactor:0.70, sanCap:30, sanRate:29.40,
+       fixed:215, esc:9}
+    ],
+    cluster: [
+      {id:'stel_bc', name:'Body Corporate (bulk)', desc:'Bulk metered complex',
+       steps:[{to:6,rate:24.50},{to:15,rate:38.20},{to:30,rate:56.80},{to:Infinity,rate:92.40}],
+       sanFactor:0.70, sanCap:30, sanRate:29.40,
+       fixed:520, esc:9}
+    ],
+    com: [
+      {id:'stel_com', name:'Commercial', desc:'Business &amp; industrial',
+       steps:[{to:Infinity,rate:41.80}],
+       sanFactor:0.95, sanCap:Infinity, sanRate:33.10,
+       fixed:980, esc:9}
+    ]
+  },
+  other: {
+    dom: [
+      {id:'gen_dom', name:'Generic Domestic Stepped', desc:'Edit rates in Custom Override',
+       steps:[{to:6,rate:28.00},{to:12,rate:42.00},{to:35,rate:60.00},{to:Infinity,rate:100.00}],
+       sanFactor:0.70, sanCap:35, sanRate:32.00, fixed:240, esc:9}
+    ],
+    cluster: [
+      {id:'gen_bc', name:'Generic Bulk', desc:'Edit rates in Custom Override',
+       steps:[{to:6,rate:28.00},{to:12,rate:42.00},{to:35,rate:60.00},{to:Infinity,rate:100.00}],
+       sanFactor:0.70, sanCap:35, sanRate:32.00, fixed:480, esc:9}
+    ],
+    com: [
+      {id:'gen_com', name:'Generic Commercial', desc:'Edit rates in Custom Override',
+       steps:[{to:Infinity,rate:44.00}],
+       sanFactor:0.95, sanCap:Infinity, sanRate:35.00, fixed:1100, esc:9}
+    ]
+  }
+};
+
+const RAINFALL = {
+  cpt:    [15,17,20,41,69,93,82,77,40,30,14,17],
+  sthn:   [25,28,40,85,145,190,175,160,85,62,30,25],
+  wcoast: [8,10,13,26,45,60,53,49,26,19,10,11],
+  wboland:[18,22,30,58,98,130,115,105,55,42,22,25]
+};
+let rainMM = RAINFALL.cpt.slice();
+
+/* Restriction levels: litres per person per day */
+const RESTRICT = {0:220, 3:105, 5:87, 6:50, 9:25};
+
+/* ---------- TARIFF MATHS ---------- */
+function stepCost(kl, steps){
+  let c = 0, prev = 0;
+  for(const s of steps){
+    if(kl <= prev) break;
+    c += (Math.min(kl, s.to) - prev) * s.rate;
+    prev = s.to;
+  }
+  return c;
+}
+function marginalRate(kl, steps){
+  for(const s of steps) if(kl <= s.to) return s.rate;
+  return steps[steps.length-1].rate;
+}
+function sanCost(kl, t){
+  const disch = Math.min(kl * t.sanFactor, t.sanCap);
+  return t.sanSteps ? stepCost(disch, t.sanSteps) : disch * (t.sanRate||0);
+}
+function monthlyBill(kl, t){
+  const water = stepCost(kl, t.steps), san = sanCost(kl, t);
+  return {water, san, fixed:t.fixed, total:water + san + t.fixed};
+}
+/* Value of displacing d kl in a month that would otherwise use kl.
+   Displaces from the TOP step down and drops the sanitation charge with it. */
+function savingFor(kl, d, t){
+  return monthlyBill(kl, t).total - monthlyBill(Math.max(0, kl - d), t).total;
+}
+/* Effective marginal rate including the sanitation knock-on */
+function effMarginal(kl, t){
+  return kl <= 0 ? marginalRate(0, t.steps) : savingFor(kl, 1, t);
+}
+
+/* ---------- USAGE TABLE ---------- */
+function initUse(){
+  const b = document.getElementById('useBody'); b.innerHTML = '';
+  use.forEach((r,i)=>{
+    b.innerHTML += `<tr>
+      <td><strong>${r.month}</strong></td>
+      <td><input type="number" step="0.1" id="q${i}" value="${r.kl||''}" placeholder="0" onchange="upd(${i})"></td>
+      <td><input type="number" id="w${i}" value="${r.water||''}" placeholder="auto" onchange="upd(${i})"></td>
+      <td><input type="number" id="v${i}" value="${r.san||''}" placeholder="auto" onchange="upd(${i})"></td>
+      <td><input type="number" id="t${i}" value="${r.total||''}" placeholder="auto" onchange="upd(${i})"></td>
+      <td><input type="text" id="n${i}" value="${r.notes||''}" placeholder="Optional"></td>
+    </tr>`;
+  });
+}
+function upd(i){
+  use[i] = {month:use[i].month,
+    kl:    +document.getElementById('q'+i).value || 0,
+    water: +document.getElementById('w'+i).value || 0,
+    san:   +document.getElementById('v'+i).value || 0,
+    total: +document.getElementById('t'+i).value || 0,
+    notes: document.getElementById('n'+i).value || ''};
+}
+function loadSample(){
+  document.getElementById('cName').value = 'Sample Residential Client';
+  document.getElementById('cSite').value = '14 Vineyard Road, Claremont';
+  const s = [32.4,29.8,26.5,19.2,14.6,12.1,11.4,12.8,17.3,23.6,28.9,34.1];
+  s.forEach((kl,i)=>{
+    const b = monthlyBill(kl, tariff || TARIFFS.coct.dom[0]);
+    use[i] = {...use[i], kl, water:Math.round(b.water), san:Math.round(b.san), total:Math.round(b.total)};
+    const set = (p,v)=>{const e=document.getElementById(p+i); if(e) e.value = v;};
+    set('q',kl); set('w',use[i].water); set('v',use[i].san); set('t',use[i].total);
+  });
+}
+
+/* ---------- TARIFF UI ---------- */
+function refreshTariffs(){
+  const m = document.getElementById('muni').value, c = document.getElementById('cat').value;
+  const opts = (TARIFFS[m] && TARIFFS[m][c]) || [];
+  const box = document.getElementById('tariffOpts'); box.innerHTML = '';
+  opts.forEach(t=>{
+    const d = document.createElement('div');
+    d.className = 'tariff-opt' + (tariff && tariff.id === t.id ? ' sel' : '');
+    const stepped = t.steps.length > 1;
+    d.innerHTML = `<h4>${t.name} <span class="badge-sm ${stepped?'b-gold':'b-aqua'}">${stepped?'STEPPED':'FLAT'}</span></h4><p>${t.desc}</p>`;
+    d.onclick = ()=>selTariff(t,d);
+    box.appendChild(d);
+  });
+  if(opts.length) selTariff(opts[0], box.children[0]);
+}
+function selTariff(t, el){
+  tariff = t;
+  document.querySelectorAll('.tariff-opt').forEach(d=>d.classList.remove('sel'));
+  if(el) el.classList.add('sel');
+  showTariffRates(t);
+}
+function showTariffRates(t){
+  const out = document.getElementById('tariffRates');
+  if(!t){ out.innerHTML = '<p style="color:var(--text-muted);font-size:13px">Select a tariff</p>'; return; }
+  const row = (n,v)=>`<div class="trow"><span style="color:var(--text-muted)">${n}</span><span class="tval">${v}</span></div>`;
+  const cap = x => x === Infinity ? '∞' : x;
+  let h = '<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px">';
+  h += row('Tariff', t.name);
+  let prev = 0;
+  t.steps.forEach((s,i)=>{
+    h += row(`Water step ${i+1} (${prev}–${cap(s.to)} kl)`, `R ${s.rate.toFixed(2)}/kl`);
+    prev = s.to === Infinity ? prev : s.to;
+  });
+  h += row('Sanitation basis', `${Math.round(t.sanFactor*100)}% of water, capped at ${cap(t.sanCap)} kl`);
+  if(t.sanSteps){
+    let p = 0;
+    t.sanSteps.forEach((s,i)=>{ h += row(`Sanitation step ${i+1} (${p}–${cap(s.to)} kl)`, `R ${s.rate.toFixed(2)}/kl`); p = s.to === Infinity ? p : s.to; });
+  } else h += row('Sanitation rate', `R ${(t.sanRate||0).toFixed(2)}/kl`);
+  h += row('Fixed charges', `R ${t.fixed}/month`);
+  h += row('Escalation', `${t.esc}% p.a.`);
+  h += '</div>';
+  out.innerHTML = h;
+}
+function applyCustom(){
+  if(!tariff){ alert('Select a preset tariff first.'); return; }
+  const num = id => { const v = document.getElementById(id).value; return v === '' ? null : +v; };
+  const base = JSON.parse(JSON.stringify(tariff, (k,v)=> v === Infinity ? 'INF' : v),
+                          (k,v)=> v === 'INF' ? Infinity : v);
+  base.id = 'custom'; base.name = 'Custom Tariff'; base.desc = 'Client-specific rates';
+  const c = [num('s1c'), num('s2c'), num('s3c')], r = [num('s1r'), num('s2r'), num('s3r'), num('s4r')];
+  if(r.some(x => x !== null)){
+    base.steps = [
+      {to: c[0] ?? 6,    rate: r[0] ?? 30.79},
+      {to: c[1] ?? 10.5, rate: r[1] ?? 43.13},
+      {to: c[2] ?? 35,   rate: r[2] ?? 64.42},
+      {to: Infinity,     rate: r[3] ?? 114.30}
+    ];
+  }
+  const sf = num('sanF'), sr = num('sanR'), sc = num('sanCap'), fx = num('fixC'), es = num('esc');
+  if(sf !== null) base.sanFactor = sf/100;
+  if(sr !== null){ base.sanRate = sr; delete base.sanSteps; }
+  if(sc !== null) base.sanCap = sc;
+  if(fx !== null) base.fixed = fx;
+  if(es !== null) base.esc = es;
+  tariff = base;
+  showTariffRates(tariff);
+  if(analysis) runAnalysis();
+  alert('Custom tariff applied.');
+}
+
+/* ---------- ANALYSIS ---------- */
+function runAnalysis(){
+  if(!tariff) refreshTariffs();
+  const totKl = use.reduce((s,r)=>s+r.kl, 0);
+  if(!totKl){ alert('Please enter monthly water consumption (kl) first.'); return; }
+
+  // Indoor baseline = mean of the three lowest months (winter, no irrigation).
+  const sorted = use.map(r=>r.kl).filter(v=>v>0).sort((a,b)=>a-b);
+  const baseline = sorted.slice(0, Math.min(3, sorted.length)).reduce((s,v)=>s+v,0) / Math.min(3, sorted.length);
+
+  const rows = use.map(r=>{
+    const b = monthlyBill(r.kl, tariff);
+    const outdoor = Math.max(0, r.kl - baseline);
+    return {...r, calcWater:b.water, calcSan:b.san, calcTotal:b.total,
+            indoor: Math.min(r.kl, baseline), outdoor,
+            marg: effMarginal(r.kl, tariff), eff: r.kl ? b.total/r.kl : 0};
+  });
+
+  const annCost   = rows.reduce((s,r)=>s+r.calcTotal, 0);
+  const annBilled = rows.reduce((s,r)=>s+(r.total||0), 0);
+  const annIndoor = rows.reduce((s,r)=>s+r.indoor, 0);
+  const annOutdoor= rows.reduce((s,r)=>s+r.outdoor, 0);
+  const occ = +document.getElementById('occ').value || 1;
+
+  // Step exposure — how many kl land in each water step across the year
+  const bands = tariff.steps.map(()=>0);
+  rows.forEach(r=>{
+    let prev = 0;
+    tariff.steps.forEach((s,i)=>{
+      if(r.kl > prev) bands[i] += Math.min(r.kl, s.to) - prev;
+      prev = s.to;
+    });
+  });
+
+  analysis = {rows, baseline, annKl:totKl, annCost, annBilled, annIndoor, annOutdoor, bands,
+              lpd: (totKl*1000)/(365*occ), topMarg: Math.max(...rows.map(r=>r.marg))};
+
+  renderStats(); renderStepBar(); renderLeaks(); drawCharts();
+  calcRain(); calcBore(); calcGrey(); buildRecs(); calcResilience();
+  go('analysis');
+}
+
+function renderStats(){
+  const a = analysis, avgKl = a.annKl/12;
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat-card"><div class="stat-lbl">Annual Consumption</div><div class="stat-val aqua">${a.annKl.toFixed(1)}</div><div class="stat-lbl">kl/year · ${avgKl.toFixed(1)} kl/month</div></div>
+    <div class="stat-card"><div class="stat-lbl">Annual Water Cost</div><div class="stat-val gold">R ${fmt(Math.round(a.annCost))}</div><div class="stat-lbl">R ${Math.round(a.annCost/12).toLocaleString('en-ZA')}/month average</div></div>
+    <div class="stat-card"><div class="stat-lbl">Marginal Rate (peak month)</div><div class="stat-val red">R ${a.topMarg.toFixed(2)}</div><div class="stat-lbl">per kl saved, incl. sanitation</div></div>
+    <div class="stat-card"><div class="stat-lbl">Usage per Person</div><div class="stat-val ${a.lpd>200?'red':a.lpd>120?'gold':'green'}">${Math.round(a.lpd)}</div><div class="stat-lbl">litres/person/day</div></div>`;
+}
+
+function renderStepBar(){
+  const a = analysis, tot = a.bands.reduce((s,v)=>s+v,0) || 1;
+  const cols = ['#00a896','#00c2e0','#f0a500','#ff4444'];
+  let bar = '<div class="step-bar">', legend = '';
+  let prev = 0;
+  a.bands.forEach((v,i)=>{
+    const pct = v/tot*100, s = tariff.steps[i];
+    if(pct > 0.5) bar += `<div class="step-seg" style="width:${pct}%;background:${cols[i%4]}">${pct>7?pct.toFixed(0)+'%':''}</div>`;
+    const cap = s.to === Infinity ? '∞' : s.to;
+    legend += `<div class="trow"><span style="color:var(--text-muted)"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${cols[i%4]};margin-right:7px"></span>Step ${i+1} — ${prev}–${cap} kl @ R${s.rate.toFixed(2)}</span><span class="tval">${v.toFixed(1)} kl · R ${fmt(Math.round(v*s.rate))}</span></div>`;
+    prev = s.to === Infinity ? prev : s.to;
+  });
+  bar += '</div>';
+  const top = a.bands[a.bands.length-1] > 0;
+  document.getElementById('stepBar').innerHTML = bar + legend +
+    (top ? `<div class="alert alert-warning" style="margin-top:14px">⚠️ This property reaches the <strong>highest tariff step</strong>. Those kilolitres cost R${tariff.steps[tariff.steps.length-1].rate.toFixed(2)}/kl before sanitation — displacing them first is where the return lives.</div>` : '');
+}
+
+function renderLeaks(){
+  const a = analysis, occ = +document.getElementById('occ').value || 1;
+  const minKl = Math.min(...a.rows.map(r=>r.kl).filter(v=>v>0));
+  const expectedIndoor = occ * 0.15 * 30;   // 150 l/person/day baseline indoor
+  const flags = [];
+
+  if(minKl > expectedIndoor * 1.6)
+    flags.push(['red', `Possible continuous leak. Lowest month is ${minKl.toFixed(1)} kl against an expected indoor baseline of ${expectedIndoor.toFixed(1)} kl for ${occ} occupant(s). A steady overnight draw of this size is typically a toilet valve, a pool top-up line, or an underground supply leak. Recommend a meter-stop test before quoting any supply system.`]);
+  if(a.lpd > 250)
+    flags.push(['gold', `Consumption of ${Math.round(a.lpd)} l/person/day is well above the CoCT target band. Efficiency retrofits will almost certainly out-perform capital supply on cost per kilolitre — see the Greywater & Efficiency tab.`]);
+
+  a.rows.forEach((r,i)=>{
+    const prev = a.rows[(i+11)%12].kl, next = a.rows[(i+1)%12].kl, nb = (prev+next)/2;
+    if(nb > 0 && r.kl > nb*1.8 && r.kl - nb > 8)
+      flags.push(['gold', `${r.month} consumption of ${r.kl.toFixed(1)} kl is ${((r.kl/nb-1)*100).toFixed(0)}% above adjacent months — check for a burst, a filling event, or an estimated reading.`]);
+    if(r.total > 0 && Math.abs(r.total - r.calcTotal) > Math.max(150, r.calcTotal*0.15))
+      flags.push(['aqua', `${r.month}: billed R${fmt(Math.round(r.total))} vs R${fmt(Math.round(r.calcTotal))} computed from the selected tariff (${((r.total/r.calcTotal-1)*100).toFixed(0)}% variance). Either the tariff preset needs updating or the account warrants a billing query.`]);
+  });
+
+  document.getElementById('leakOut').innerHTML = flags.length
+    ? flags.map(([k,m])=>`<div class="alert alert-${k==='red'?'warning':k==='gold'?'warning':'info'}" style="border-left-color:var(--${k})">${k==='red'?'🚨':k==='gold'?'⚠️':'ℹ️'} ${m}</div>`).join('')
+    : '<div class="alert alert-success">✅ No continuous-flow leak signature or billing anomaly detected. Consumption pattern is seasonally consistent.</div>';
+}
+
+function mkChart(id, type, labels, datasets, stacked=false){
+  const ctx = document.getElementById(id); if(!ctx) return;
+  if(typeof Chart === 'undefined') return;   // charts are optional; the numbers are not
+  if(charts[id]) charts[id].destroy();
+  charts[id] = new Chart(ctx, {type, data:{labels, datasets}, options:{responsive:true,
+    plugins:{legend:{labels:{color:'#8bb0c0', font:{size:11}}}},
+    scales:{x:{stacked, grid:{color:'rgba(255,255,255,0.04)'}, ticks:{color:'#8bb0c0'}},
+            y:{stacked, grid:{color:'rgba(255,255,255,0.04)'}, ticks:{color:'#8bb0c0'}}}}});
+}
+
+function drawCharts(){
+  const a = analysis;
+  mkChart('cChart','bar',MO,[{label:'Consumption (kl)',data:a.rows.map(r=>r.kl),backgroundColor:'rgba(0,194,224,0.7)',borderRadius:4}]);
+  mkChart('costChart','bar',MO,[
+    {label:'Water (R)',data:a.rows.map(r=>Math.round(r.calcWater)),backgroundColor:'rgba(0,194,224,0.75)',borderRadius:3},
+    {label:'Sanitation (R)',data:a.rows.map(r=>Math.round(r.calcSan)),backgroundColor:'rgba(0,168,150,0.75)',borderRadius:3},
+    {label:'Fixed (R)',data:a.rows.map(()=>Math.round(tariff.fixed)),backgroundColor:'rgba(240,165,0,0.7)',borderRadius:3}], true);
+  mkChart('splitChart','bar',MO,[
+    {label:'Indoor (kl)',data:a.rows.map(r=>+r.indoor.toFixed(1)),backgroundColor:'rgba(0,168,150,0.8)',borderRadius:3},
+    {label:'Outdoor / irrigation (kl)',data:a.rows.map(r=>+r.outdoor.toFixed(1)),backgroundColor:'rgba(240,165,0,0.8)',borderRadius:3}], true);
+  mkChart('rateChart','line',MO,[
+    {label:'Effective rate (R/kl)',data:a.rows.map(r=>+r.eff.toFixed(2)),borderColor:'#00c2e0',backgroundColor:'rgba(0,194,224,0.12)',tension:0.35,fill:true},
+    {label:'Marginal rate (R/kl)',data:a.rows.map(r=>+r.marg.toFixed(2)),borderColor:'#ff4444',backgroundColor:'rgba(255,68,68,0.08)',tension:0.35,borderDash:[5,4],fill:true}]);
+}
+
+/* ---------- RAINWATER HARVESTING ---------- */
+function initRainTable(){
+  document.getElementById('rainHead').innerHTML = '<th>mm</th>' + MO.map(m=>`<th>${m}</th>`).join('');
+  document.getElementById('rainRow').innerHTML = '<td><strong>Rain</strong></td>' +
+    rainMM.map((v,i)=>`<td><input type="number" id="rm${i}" value="${v}" onchange="editRain(${i})" style="min-width:56px"></td>`).join('');
+}
+function editRain(i){
+  rainMM[i] = +document.getElementById('rm'+i).value || 0;
+  document.getElementById('rainReg').value = 'custom';
+  calcRain();
+}
+function setRainProfile(){
+  const r = document.getElementById('rainReg').value;
+  if(RAINFALL[r]){ rainMM = RAINFALL[r].slice(); initRainTable(); }
+  calcRain();
+}
+
+/* Monthly demand this source is allowed to serve, by end use. */
+function demandFor(endUse){
+  if(!analysis) return MO.map(()=>0);
+  return analysis.rows.map(r=>{
+    if(endUse === 'garden') return r.outdoor;
+    if(endUse === 'nonpot') return r.outdoor + r.indoor*0.55;   // toilets, laundry, cleaning
+    return r.kl;
+  });
+}
+
+function calcRain(){
+  if(!analysis) return;
+  const roof = +document.getElementById('roof').value || 0,
+        runoff = +document.getElementById('runoff').value || 0.85,
+        flush = +document.getElementById('flush').value || 0,
+        tankKl = +document.getElementById('tank').value || 0,
+        endUse = document.getElementById('rUse').value,
+        life = +document.getElementById('rLife').value || 20,
+        maint = +document.getElementById('rMaint').value || 0;
+
+  const capex = tankKl * (+document.getElementById('rTankCost').value || 0)
+              + (+document.getElementById('rFixCost').value || 0)
+              + (endUse === 'pot' ? 26000 : 0);   // UV + potable-grade filtration train
+
+  const sim = simulateTank(roof, runoff, flush, tankKl, demandFor(endUse));
+  const saving = sim.supplied.reduce((s,v,i)=>s + savingFor(analysis.rows[i].kl, v, tariff), 0);
+  const annSupplied = sim.supplied.reduce((s,v)=>s+v, 0);
+  const net = saving - maint;
+  rain = {capex, saving, maint, net, annSupplied, life, tankKl, endUse,
+          yield_: sim.yield_, supplied: sim.supplied, level: sim.level, spill: sim.spill,
+          payback: net > 0 ? capex/net : Infinity,
+          lcow: lcow(capex, maint, annSupplied, life)};
+
+  document.getElementById('rainStats').innerHTML = `
+    <div class="stat-card"><div class="stat-lbl">Annual Roof Yield</div><div class="stat-val aqua">${sim.yield_.reduce((s,v)=>s+v,0).toFixed(1)}</div><div class="stat-lbl">kl captured before storage limits</div></div>
+    <div class="stat-card"><div class="stat-lbl">Actually Supplied</div><div class="stat-val teal">${annSupplied.toFixed(1)}</div><div class="stat-lbl">kl/yr · ${(annSupplied/analysis.annKl*100).toFixed(0)}% of total demand</div></div>
+    <div class="stat-card"><div class="stat-lbl">Annual Net Saving</div><div class="stat-val green">R ${fmt(Math.round(net))}</div><div class="stat-lbl">after R${fmt(maint)} maintenance</div></div>
+    <div class="stat-card"><div class="stat-lbl">Simple Payback</div><div class="stat-val ${rain.payback<10?'green':rain.payback<18?'gold':'red'}">${rain.payback===Infinity?'—':rain.payback.toFixed(1)}</div><div class="stat-lbl">years on R${fmt(Math.round(capex))} capex</div></div>`;
+
+  mkChart('rainChart','bar',MO,[
+    {label:'Roof yield (kl)',data:sim.yield_.map(v=>+v.toFixed(1)),backgroundColor:'rgba(0,194,224,0.75)',borderRadius:3},
+    {label:'Demand (kl)',data:demandFor(endUse).map(v=>+v.toFixed(1)),backgroundColor:'rgba(240,165,0,0.55)',borderRadius:3},
+    {label:'Supplied (kl)',data:sim.supplied.map(v=>+v.toFixed(1)),backgroundColor:'rgba(0,200,83,0.8)',borderRadius:3}]);
+  mkChart('tankChart','line',MO,[
+    {label:'Storage level (kl)',data:sim.level.map(v=>+v.toFixed(1)),borderColor:'#00c2e0',backgroundColor:'rgba(0,194,224,0.15)',tension:0.35,fill:true},
+    {label:'Overflow / spill (kl)',data:sim.spill.map(v=>+v.toFixed(1)),borderColor:'#ff4444',backgroundColor:'rgba(255,68,68,0.08)',tension:0.35,borderDash:[5,4],fill:true}]);
+
+  renderTankSens(roof, runoff, flush, endUse, maint, life);
+}
+
+/* Three passes so the tank starts each reported year at a realistic level
+   instead of empty in January — Cape Town's wet season is mid-year. */
+function simulateTank(roof, runoff, flush, tankKl, demand){
+  const yield_ = rainMM.map(mm=>{
+    const events = Math.min(Math.round(mm/7), 18);
+    const eff = Math.max(0, mm - events*flush) * runoff;
+    return roof * eff / 1000;
+  });
+  let level = 0, supplied = [], lvlOut = [], spill = [];
+  for(let pass = 0; pass < 3; pass++){
+    supplied = []; lvlOut = []; spill = [];
+    for(let i = 0; i < 12; i++){
+      level += yield_[i];
+      const over = Math.max(0, level - tankKl);
+      level = Math.min(level, tankKl);
+      const s = Math.min(level, demand[i]);
+      level -= s;
+      supplied.push(s); lvlOut.push(level); spill.push(over);
+    }
+  }
+  return {yield_, supplied, level:lvlOut, spill};
+}
+
+function renderTankSens(roof, runoff, flush, endUse, maint, life){
+  const sizes = [2.5,5,10,15,20,30,50], dem = demandFor(endUse);
+  const tankCost = +document.getElementById('rTankCost').value || 0,
+        fixCost = +document.getElementById('rFixCost').value || 0;
+  let h = '<div class="alert alert-info">ℹ️ Storage shows sharply diminishing returns. The knee of this curve — not the biggest tank the client can afford — is the number to quote.</div>';
+  h += '<table class="bill-table"><thead><tr><th>Tank (kl)</th><th>Supplied (kl/yr)</th><th>Spill lost (kl/yr)</th><th>Capex (R)</th><th>Net saving (R/yr)</th><th>Payback (yrs)</th><th>R/kl supplied</th></tr></thead><tbody>';
+  sizes.forEach(t=>{
+    const s = simulateTank(roof, runoff, flush, t, dem);
+    const sup = s.supplied.reduce((a,v)=>a+v,0);
+    const sav = s.supplied.reduce((a,v,i)=>a + savingFor(analysis.rows[i].kl, v, tariff), 0) - maint;
+    const cap = t*tankCost + fixCost + (endUse==='pot'?26000:0);
+    const pb = sav > 0 ? cap/sav : Infinity;
+    const sel = Math.abs(t - rain.tankKl) < 0.01;
+    h += `<tr style="${sel?'background:rgba(240,165,0,0.08)':''}">
+      <td><strong>${t}${sel?' ←':''}</strong></td><td>${sup.toFixed(1)}</td>
+      <td class="${s.spill.reduce((a,v)=>a+v,0)>sup?'red':''}">${s.spill.reduce((a,v)=>a+v,0).toFixed(1)}</td>
+      <td>R ${fmt(Math.round(cap))}</td><td class="green">R ${fmt(Math.round(sav))}</td>
+      <td class="${pb<10?'green':pb<18?'gold':'red'}">${pb===Infinity?'—':pb.toFixed(1)}</td>
+      <td>R ${sup>0?lcow(cap,maint,sup,life).toFixed(2):'—'}</td></tr>`;
+  });
+  document.getElementById('tankSens').innerHTML = h + '</tbody></table>';
+}
+
+/* Levelised cost of water: discounted lifetime cost / discounted lifetime volume */
+function lcow(capex, annOpex, annKl, life){
+  if(!annKl) return Infinity;
+  const d = (+document.getElementById('wacc').value || 10)/100;
+  let cost = capex, vol = 0;
+  for(let y = 1; y <= life; y++){ const f = Math.pow(1+d, y); cost += annOpex/f; vol += annKl/f; }
+  return vol ? cost/vol : Infinity;
+}
+
+/* ---------- BOREHOLE ---------- */
+function calcBore(){
+  if(!analysis) return;
+  const v = id => +document.getElementById(id).value || 0;
+  const type = document.getElementById('bType').value, treat = document.getElementById('bTreat').value;
+  const depth = v('bDepth'), life = v('bLife') || 25, derate = v('bDerate') || 0.75;
+  const treatCost = {none:0, basic:14000, full:62000}[treat];
+  const endUse = treat === 'none' ? 'garden' : treat === 'basic' ? 'nonpot' : 'pot';
+
+  const monthlyYield = v('bYield') * v('bHours') * 30 / 1000 * derate;   // kl/month sustainable
+  const dem = demandFor(endUse);
+  const supplied = dem.map(d => Math.min(d, monthlyYield));
+  const annSupplied = supplied.reduce((s,x)=>s+x, 0);
+
+  const drilling = depth * (v('bRate') + v('bCase'));
+  const capexBase = drilling + v('bPump') + v('bSurvey') + treatCost;
+  const dryRisk = v('bRisk')/100;
+  const capex = capexBase + dryRisk * drilling;    // expected cost of one unsuccessful hole
+
+  const energy = annSupplied * v('bKwh') * v('bElec');
+  const opex = v('bMaint') + energy;
+  const saving = supplied.reduce((s,x,i)=>s + savingFor(analysis.rows[i].kl, x, tariff), 0);
+  const net = saving - opex;
+
+  bore = {capex, capexBase, drilling, treatCost, dryRisk, opex, energy, saving, net, annSupplied,
+          monthlyYield, supplied, life, endUse, type,
+          payback: net > 0 ? capex/net : Infinity,
+          lcow: lcow(capex, opex, annSupplied, life)};
+
+  document.getElementById('boreStats').innerHTML = `
+    <div class="stat-card"><div class="stat-lbl">Sustainable Yield</div><div class="stat-val aqua">${monthlyYield.toFixed(1)}</div><div class="stat-lbl">kl/month at ${v('bHours')}h/day, ${(derate*100).toFixed(0)}% derate</div></div>
+    <div class="stat-card"><div class="stat-lbl">Demand Displaced</div><div class="stat-val teal">${annSupplied.toFixed(1)}</div><div class="stat-lbl">kl/yr · ${(annSupplied/analysis.annKl*100).toFixed(0)}% of total demand</div></div>
+    <div class="stat-card"><div class="stat-lbl">Levelised Cost</div><div class="stat-val ${bore.lcow<analysis.topMarg?'green':'red'}">R ${bore.lcow===Infinity?'—':bore.lcow.toFixed(2)}</div><div class="stat-lbl">per kl vs R${analysis.topMarg.toFixed(2)} municipal marginal</div></div>
+    <div class="stat-card"><div class="stat-lbl">Risk-Adjusted Payback</div><div class="stat-val ${bore.payback<10?'green':bore.payback<18?'gold':'red'}">${bore.payback===Infinity?'—':bore.payback.toFixed(1)}</div><div class="stat-lbl">years on R${fmt(Math.round(capex))} expected capex</div></div>`;
+
+  const row = (n,val,cls='') => `<div class="trow"><span style="color:var(--text-muted)">${n}</span><span class="tval ${cls}">${val}</span></div>`;
+  document.getElementById('boreOut').innerHTML =
+    `<div class="grid-2"><div>
+      ${row('Drilling &amp; casing ('+depth+'m)', 'R '+fmt(Math.round(drilling)))}
+      ${row('Pump, control &amp; plumbing', 'R '+fmt(v('bPump')))}
+      ${row('Siting survey &amp; registration', 'R '+fmt(v('bSurvey')))}
+      ${row('Treatment train', 'R '+fmt(treatCost))}
+      ${row('Dry-hole risk provision ('+v('bRisk')+'%)', 'R '+fmt(Math.round(dryRisk*drilling)), 'red')}
+      ${row('<strong>Expected total capex</strong>', '<strong>R '+fmt(Math.round(capex))+'</strong>')}
+    </div><div>
+      ${row('Annual pumping energy', 'R '+fmt(Math.round(energy))+' ('+Math.round(annSupplied*v('bKwh'))+' kWh)')}
+      ${row('Annual maintenance', 'R '+fmt(v('bMaint')))}
+      ${row('Annual municipal saving', 'R '+fmt(Math.round(saving)), 'green')}
+      ${row('<strong>Net annual benefit</strong>', '<strong class="'+(net>0?'green':'red')+'">R '+fmt(Math.round(net))+'</strong>')}
+      ${row('Permitted end use', endUse==='garden'?'Irrigation only':endUse==='nonpot'?'Non-potable (garden, toilets, laundry)':'Full potable')}
+      ${row('Design life', life+' years')}
+    </div></div>` +
+    (bore.lcow > analysis.topMarg
+      ? `<div class="alert alert-warning" style="margin-top:14px">⚠️ At R${bore.lcow.toFixed(2)}/kl levelised, this borehole costs <strong>more than municipal water</strong> at the client's current marginal rate of R${analysis.topMarg.toFixed(2)}/kl. Sell it on resilience and restriction-proofing, not on savings — or reduce demand first so the system can be smaller.</div>`
+      : `<div class="alert alert-success" style="margin-top:14px">✅ At R${bore.lcow.toFixed(2)}/kl levelised, this borehole undercuts the client's marginal municipal rate of R${analysis.topMarg.toFixed(2)}/kl. The saving case stands on its own before any resilience value.</div>`);
+
+  const yrs = Array.from({length:life+1},(_,i)=>i);
+  const esc = tariff.esc/100;
+  let cum = -capex; const cash = [cum];
+  for(let y = 1; y <= life; y++){ cum += saving*Math.pow(1+esc,y-1) - opex; cash.push(Math.round(cum)); }
+  mkChart('boreChart','line',yrs,[{label:'Cumulative cash flow (R)',data:cash,borderColor:'#00c853',backgroundColor:'rgba(0,200,83,0.12)',tension:0.25,fill:true,pointRadius:0}]);
+
+  const muni = yrs.slice(1).map(y=>+(analysis.topMarg*Math.pow(1+esc,y-1)).toFixed(2));
+  mkChart('lcowChart','line',yrs.slice(1),[
+    {label:'Municipal marginal rate (R/kl)',data:muni,borderColor:'#ff4444',backgroundColor:'rgba(255,68,68,0.08)',tension:0.25,fill:true,pointRadius:0},
+    {label:'Borehole levelised (R/kl)',data:yrs.slice(1).map(()=>+bore.lcow.toFixed(2)),borderColor:'#00c2e0',borderDash:[6,4],tension:0,pointRadius:0}]);
+}
+
+/* ---------- GREYWATER & EFFICIENCY ---------- */
+let effSel = {};
+function effOptions(){
+  const occ = +document.getElementById('occ').value || 1,
+        garden = +document.getElementById('garden').value || 0,
+        ann = analysis ? analysis.annKl : 0;
+  return [
+    {id:'leak',    name:'Leak audit, washer &amp; valve replacement',   cost:3500,              save:24},
+    {id:'aerator', name:'Tap aerators throughout',                      cost:950,               save:occ*4.2},
+    {id:'shower',  name:'Low-flow showerheads (7 l/min)',               cost:occ*650,           save:occ*10.8},
+    {id:'dual',    name:'Dual-flush conversion / cistern displacement',  cost:occ*1400,          save:occ*9.0},
+    {id:'mulch',   name:'Mulching &amp; soil conditioning',             cost:garden*38,         save:garden*0.09},
+    {id:'drip',    name:'Drip irrigation + soil-moisture controller',   cost:18000+garden*45,   save:garden*0.18},
+    {id:'wise',    name:'Water-wise / indigenous replanting',           cost:garden*160,        save:garden*0.30},
+    {id:'pool',    name:'Pool cover (evaporation control)',             cost:9500,              save:32},
+    {id:'meter',   name:'Smart sub-metering with leak alerts',          cost:12000,             save:ann*0.06}
+  ].filter(o=>o.save > 0.5);
+}
+function renderEffList(){
+  const opts = effOptions();
+  document.getElementById('effList').innerHTML = opts.map(o=>{
+    if(!(o.id in effSel)) effSel[o.id] = ['leak','aerator','shower','mulch'].includes(o.id);
+    return `<label class="chk"><input type="checkbox" id="ef_${o.id}" ${effSel[o.id]?'checked':''} onchange="toggleEff('${o.id}')">
+      <span style="flex:1">${o.name}</span>
+      <span class="badge-sm b-aqua">${o.save.toFixed(1)} kl/yr</span>
+      <span class="badge-sm b-gold">R ${fmt(Math.round(o.cost))}</span></label>`;
+  }).join('');
+}
+function toggleEff(id){ effSel[id] = document.getElementById('ef_'+id).checked; calcGrey(); }
+function selectAllEff(v){ effOptions().forEach(o=>effSel[o.id] = v); renderEffList(); calcGrey(); }
+
+function calcGrey(){
+  if(!analysis) return;
+  renderEffList();
+  const gType = document.getElementById('gType').value,
+        gPct = (+document.getElementById('gPct').value||0)/100,
+        gEff = (+document.getElementById('gEff').value||0)/100,
+        gMaint = +document.getElementById('gMaint').value || 0;
+  const gCost = {none:0, direct:12000, treated:48000}[gType];
+  const gLife = gType === 'treated' ? 15 : 10;
+
+  // Greywater can only serve garden (direct) or garden + toilets (treated).
+  const cap = analysis.rows.map(r => gType === 'treated' ? r.outdoor + r.indoor*0.25 : r.outdoor);
+  const recovered = analysis.rows.map((r,i)=> gType === 'none' ? 0 : Math.min(r.indoor*gPct*gEff, cap[i]));
+  const gSupplied = recovered.reduce((s,v)=>s+v, 0);
+  const gSaving = recovered.reduce((s,v,i)=>s + savingFor(analysis.rows[i].kl, v, tariff), 0);
+  const gNet = gSaving - gMaint;
+
+  const chosen = effOptions().filter(o=>effSel[o.id]);
+  const effKl = chosen.reduce((s,o)=>s+o.save, 0);
+  const effCost = chosen.reduce((s,o)=>s+o.cost, 0);
+  // Efficiency saves proportionally across the year, off the top step each month.
+  const effSaving = analysis.rows.reduce((s,r)=>{
+    const share = analysis.annKl ? effKl * (r.kl/analysis.annKl) : 0;
+    return s + savingFor(r.kl, Math.min(share, r.kl*0.6), tariff);
+  }, 0);
+
+  grey = {gType, gCost, gMaint, gLife, gSupplied, gSaving, gNet, recovered,
+          effKl, effCost, effSaving, chosen,
+          payback: gNet > 0 ? gCost/gNet : Infinity,
+          effPayback: effSaving > 0 ? effCost/effSaving : Infinity};
+
+  document.getElementById('greyStats').innerHTML = `
+    <div class="stat-card"><div class="stat-lbl">Greywater Recovered</div><div class="stat-val aqua">${gSupplied.toFixed(1)}</div><div class="stat-lbl">kl/yr · R${fmt(Math.round(gNet))}/yr net</div></div>
+    <div class="stat-card"><div class="stat-lbl">Efficiency Savings</div><div class="stat-val teal">${effKl.toFixed(1)}</div><div class="stat-lbl">kl/yr from ${chosen.length} retrofit(s)</div></div>
+    <div class="stat-card"><div class="stat-lbl">Combined Demand Cut</div><div class="stat-val green">${((gSupplied+effKl)/analysis.annKl*100).toFixed(0)}%</div><div class="stat-lbl">of annual consumption</div></div>
+    <div class="stat-card"><div class="stat-lbl">Efficiency Payback</div><div class="stat-val ${grey.effPayback<4?'green':grey.effPayback<8?'gold':'red'}">${grey.effPayback===Infinity?'—':grey.effPayback.toFixed(1)}</div><div class="stat-lbl">years on R${fmt(Math.round(effCost))}</div></div>`;
+
+  renderMAC();
+}
+
+function renderMAC(){
+  const items = effOptions().map(o=>({
+    name:o.name, kl:o.save, cost:o.cost, life:12,
+    mac: o.save > 0 ? lcow(o.cost, 0, o.save, 12) : Infinity, sel: effSel[o.id]
+  }));
+  if(grey.gType !== 'none' && grey.gSupplied > 0)
+    items.push({name: grey.gType==='treated'?'Greywater — treated &amp; stored':'Greywater — direct diversion',
+                kl:grey.gSupplied, cost:grey.gCost, life:grey.gLife,
+                mac: lcow(grey.gCost, grey.gMaint, grey.gSupplied, grey.gLife), sel:true});
+  if(rain && rain.annSupplied > 0)
+    items.push({name:'Rainwater harvesting ('+rain.tankKl+' kl storage)', kl:rain.annSupplied, cost:rain.capex,
+                life:rain.life, mac:rain.lcow, sel:true});
+  if(bore && bore.annSupplied > 0)
+    items.push({name:'Borehole / wellpoint', kl:bore.annSupplied, cost:bore.capex, life:bore.life, mac:bore.lcow, sel:true});
+
+  items.sort((a,b)=>a.mac - b.mac);
+  const marg = analysis.topMarg;
+  let h = `<div class="alert alert-info">ℹ️ Anything below the red line — the client's marginal municipal rate of <strong>R${marg.toFixed(2)}/kl</strong> — pays for itself on tariff alone. Anything above it must be justified on resilience.</div>`;
+  h += '<table class="bill-table"><thead><tr><th>Intervention</th><th>Saves (kl/yr)</th><th>Capex (R)</th><th>Cost per kl (R)</th><th>vs Municipal</th></tr></thead><tbody>';
+  items.forEach(it=>{
+    const good = it.mac < marg;
+    h += `<tr><td>${it.name}${it.sel?' <span class="badge-sm b-green">selected</span>':''}</td>
+      <td>${it.kl.toFixed(1)}</td><td>R ${fmt(Math.round(it.cost))}</td>
+      <td class="${good?'green':'red'}"><strong>R ${it.mac===Infinity?'—':it.mac.toFixed(2)}</strong></td>
+      <td><span class="badge-sm ${good?'b-green':'b-red'}">${good?'▼ '+((1-it.mac/marg)*100).toFixed(0)+'% cheaper':'▲ '+((it.mac/marg-1)*100).toFixed(0)+'% dearer'}</span></td></tr>`;
+  });
+  document.getElementById('macOut').innerHTML = h + '</tbody></table>';
+}
+
+/* ---------- PACKAGES ---------- */
+/* Displacement streams must be applied in order, each valued against what the
+   previous ones have already removed. Costing them independently would bill the
+   same top-step kilolitres to two different interventions and overstate savings. */
+function stackedSaving(streams){
+  const remaining = analysis.rows.map(r=>r.kl);
+  let saving = 0;
+  streams.forEach(s=>{
+    for(let i = 0; i < 12; i++){
+      const d = Math.max(0, Math.min(s[i]||0, remaining[i]));
+      saving += savingFor(remaining[i], d, tariff);
+      remaining[i] -= d;
+    }
+  });
+  const displaced = analysis.rows.map((r,i)=>r.kl - remaining[i]);
+  return {saving, remaining, displaced, kl: displaced.reduce((a,v)=>a+v,0)};
+}
+
+/* Spread an annual efficiency saving across months in proportion to use,
+   capped so no month is modelled as losing more than 60% of its draw. */
+function effMonthly(annualKl){
+  return analysis.rows.map(r=>{
+    const share = analysis.annKl ? annualKl*(r.kl/analysis.annKl) : 0;
+    return Math.min(share, r.kl*0.6);
+  });
+}
+
+function buildRecs(){
+  if(!analysis || !rain || !bore || !grey) return;
+  const esc = tariff.esc/100, disc = (+document.getElementById('wacc').value||10)/100;
+  const sum = (a,k)=>a.reduce((s,o)=>s+o[k],0);
+
+  // Only retrofits that beat the marginal municipal rate belong in a package.
+  const ranked = effOptions().map(o=>({...o, mac: lcow(o.cost,0,o.save,12)}))
+                             .filter(o=>o.mac < analysis.topMarg)
+                             .sort((a,b)=>a.mac - b.mac);
+  const essential = ranked.slice(0,4);
+
+  const smallSim = simulateTank(+document.getElementById('roof').value||0,
+    +document.getElementById('runoff').value||0.85, +document.getElementById('flush').value||0,
+    5, demandFor('garden'));
+  const smallCap = 5*(+document.getElementById('rTankCost').value||0) + (+document.getElementById('rFixCost').value||0);
+  const hasGrey = grey.gType !== 'none' && grey.gSupplied > 0;
+
+  const A = stackedSaving([effMonthly(sum(essential,'save')), smallSim.supplied]);
+  const B = stackedSaving([effMonthly(sum(ranked,'save')), rain.supplied, hasGrey ? grey.recovered : MO.map(()=>0)]);
+  const C = stackedSaving([effMonthly(sum(ranked,'save')), rain.supplied, bore.supplied]);
+
+  packs = [
+    {name:'Package A — Essential', tag:'Demand-side first', stack:A,
+     items:[essential.length+' efficiency retrofit(s), cheapest first', '5 kl rainwater storage (garden only)',
+            'Leak audit &amp; metered baseline', 'No treatment required'],
+     capex: sum(essential,'cost') + smallCap, opex: 900, storage: 5, boreYield: 0, life: 15},
+    {name:'Package B — Balanced', tag:'Best rand-for-rand', stack:B,
+     items:[ranked.length+' efficiency retrofit(s)', rain.tankKl+' kl rainwater, non-potable reticulation',
+            hasGrey ? (grey.gType==='treated'?'Greywater treated &amp; stored':'Greywater direct diversion') : 'Greywater diversion — not configured',
+            'Sediment + carbon filtration'],
+     capex: sum(ranked,'cost') + rain.capex + (hasGrey ? grey.gCost : 0),
+     opex: rain.maint + (hasGrey ? grey.gMaint : 0), storage: rain.tankKl, boreYield: 0, life: 20},
+    {name:'Package C — Full Independence', tag:'Restriction-proof', stack:C,
+     items:[ranked.length+' efficiency retrofit(s)', rain.tankKl+' kl rainwater storage',
+            'Borehole with '+(bore.endUse==='pot'?'full potable treatment':bore.endUse==='nonpot'?'sediment + carbon filtration':'no treatment'),
+            'Automatic municipal changeover'],
+     capex: sum(ranked,'cost') + rain.capex + bore.capex,
+     opex: rain.maint + bore.opex, storage: rain.tankKl, boreYield: bore.monthlyYield/30, life: 25}
+  ];
+
+  packs.forEach(p=>{
+    p.saving = p.stack.saving;
+    p.kl = p.stack.kl;
+    p.net = p.saving - p.opex;
+    p.payback = p.net > 0 ? p.capex/p.net : Infinity;
+    p.pct = analysis.annKl ? p.kl/analysis.annKl*100 : 0;
+    let npv = -p.capex;
+    for(let y = 1; y <= p.life; y++) npv += (p.saving*Math.pow(1+esc,y-1) - p.opex)/Math.pow(1+disc,y);
+    p.npv = npv;
+    p.lcow = lcow(p.capex, p.opex, p.kl, p.life);
+  });
+
+  const best = packs.reduce((b,p,i)=> p.npv > packs[b].npv ? i : b, 0);
+  document.getElementById('recAlert').innerHTML =
+    `✅ Sized for <strong>${analysis.annKl.toFixed(1)} kl/yr</strong> at a marginal rate of <strong>R${analysis.topMarg.toFixed(2)}/kl</strong>. Highest ${packs[best].life}-year NPV: <strong>${packs[best].name}</strong>. Savings are stacked sequentially, so no kilolitre is counted twice.`;
+
+  document.getElementById('recCards').innerHTML = packs.map((p,i)=>`
+    <div class="rec-card ${i===best?'best':''}">
+      <div class="rec-title">${p.name}</div>
+      <div class="badge-sm b-aqua">${p.tag}</div>
+      <div class="rec-size">${p.pct.toFixed(0)}%</div>
+      <div class="stat-lbl">of demand no longer bought from the municipality</div>
+      <div class="prog"><div class="prog-fill" style="width:${Math.min(100,p.pct)}%;background:linear-gradient(90deg,var(--teal),var(--aqua))"></div></div>
+      <div class="rec-items">${p.items.map(x=>'• '+x).join('<br>')}</div>
+      <div class="rec-sav">R ${fmt(p.net)}<span style="font-size:12px;color:var(--text-muted)">/yr net</span></div>
+      <div class="rec-pay">Capex R ${fmt(p.capex)} · payback ${p.payback===Infinity?'—':p.payback.toFixed(1)} yrs</div>
+      <div class="rec-pay">Levelised R ${p.lcow===Infinity?'—':p.lcow.toFixed(2)}/kl · ${p.life}-yr NPV <span class="${p.npv>0?'green':'red'}">R ${fmt(p.npv)}</span></div>
+    </div>`).join('');
+
+  const yrs = Array.from({length:21},(_,i)=>i);
+  const muniOnly = yrs.map(y=>{ let c=0; for(let k=1;k<=y;k++) c += analysis.annCost*Math.pow(1+esc,k-1); return Math.round(c); });
+  const series = packs.map((p,i)=>({
+    label:p.name, data: yrs.map(y=>{ let c = p.capex; for(let k=1;k<=y;k++) c += (analysis.annCost - p.saving)*Math.pow(1+esc,k-1) + p.opex; return Math.round(c); }),
+    borderColor:['#00a896','#00c2e0','#f0a500'][i], backgroundColor:'transparent', tension:0.25, pointRadius:0
+  }));
+  mkChart('finChart','line',yrs,[{label:'Municipal supply only',data:muniOnly,borderColor:'#ff4444',backgroundColor:'rgba(255,68,68,0.07)',tension:0.25,fill:true,pointRadius:0}, ...series]);
+}
+
+/* ---------- RESILIENCE ---------- */
+function calcResilience(){
+  if(!analysis || !packs) return;
+  const lvl = document.getElementById('resLevel').value,
+        muniOn = document.getElementById('resMuni').value === '1',
+        days = +document.getElementById('resDays').value || 14,
+        reserve = (+document.getElementById('resReserve').value || 0)/100,
+        occ = +document.getElementById('occ').value || 1;
+
+  const lpd = RESTRICT[lvl];
+  const dailyDemand = occ * lpd / 1000;                    // kl/day under the restriction
+  const normalDaily = analysis.annKl/365;
+  const muniAllow = muniOn ? dailyDemand : 0;              // restricted municipal volume still delivered
+
+  const results = packs.map(p=>{
+    // Assume storage sits at 60% of nominal at the onset of an unplanned event.
+    const usable = p.storage * 0.60 * (1 - reserve);
+    const ownDaily = p.boreYield;                          // kl/day the borehole sustains
+    const shortfall = Math.max(0, dailyDemand - muniAllow - ownDaily);
+    const autonomy = shortfall <= 0 ? Infinity : usable/shortfall;
+    return {...p, usable, ownDaily, shortfall, autonomy, covers: autonomy >= days};
+  });
+
+  const best = results[results.length-1];
+  document.getElementById('resStats').innerHTML = `
+    <div class="stat-card"><div class="stat-lbl">Restricted Demand</div><div class="stat-val aqua">${dailyDemand.toFixed(2)}</div><div class="stat-lbl">kl/day at ${lpd} l/person/day × ${occ}</div></div>
+    <div class="stat-card"><div class="stat-lbl">Normal Demand</div><div class="stat-val gold">${normalDaily.toFixed(2)}</div><div class="stat-lbl">kl/day · a ${((1-dailyDemand/normalDaily)*100).toFixed(0)}% cut required</div></div>
+    <div class="stat-card"><div class="stat-lbl">Municipal Supply</div><div class="stat-val ${muniOn?'green':'red'}">${muniOn?'Restricted':'None'}</div><div class="stat-lbl">${muniOn?'reduced volume delivered':'complete interruption modelled'}</div></div>
+    <div class="stat-card"><div class="stat-lbl">Best Package Autonomy</div><div class="stat-val ${best.covers?'green':'red'}">${best.autonomy===Infinity?'∞':best.autonomy.toFixed(1)}</div><div class="stat-lbl">days without municipal supply</div></div>`;
+
+  let h = '<table class="bill-table"><thead><tr><th>Package</th><th>Usable storage (kl)</th><th>Own daily yield (kl)</th><th>Daily shortfall (kl)</th><th>Autonomy (days)</th><th>Covers ' + days + ' days?</th></tr></thead><tbody>';
+  results.forEach(r=>{
+    h += `<tr><td><strong>${r.name}</strong></td><td>${r.usable.toFixed(1)}</td><td>${r.ownDaily.toFixed(2)}</td>
+      <td>${r.shortfall.toFixed(2)}</td>
+      <td class="${r.covers?'green':'red'}"><strong>${r.autonomy===Infinity?'Indefinite':r.autonomy.toFixed(1)}</strong></td>
+      <td><span class="badge-sm ${r.covers?'b-green':'b-red'}">${r.covers?'✓ Yes':'✗ No'}</span></td></tr>`;
+  });
+  h += '</tbody></table>';
+  h += results.some(r=>r.autonomy===Infinity)
+    ? '<div class="alert alert-success" style="margin-top:14px">✅ At least one package sustains the property indefinitely at this restriction level — own yield alone meets restricted demand with no draw on storage.</div>'
+    : `<div class="alert alert-warning" style="margin-top:14px">⚠️ No package sustains indefinite supply at this level. To carry ${days} days, the client needs roughly <strong>${(results[results.length-1].shortfall*days/0.6/(1-reserve)).toFixed(1)} kl</strong> of nominal storage, or additional yield.</div>`;
+  document.getElementById('resOut').innerHTML = h;
+
+  const dayAxis = Array.from({length:days+1},(_,i)=>i);
+  mkChart('resChart','line',dayAxis, results.map((r,i)=>({
+    label:r.name, data: dayAxis.map(dd=>Math.max(0, +(r.usable - r.shortfall*dd).toFixed(2))),
+    borderColor:['#00a896','#00c2e0','#f0a500'][i], backgroundColor:'transparent', tension:0.15, pointRadius:0
+  })));
+}
+
+/* ---------- PROPOSAL ---------- */
+function buildProposal(){
+  if(!analysis || !packs){ document.getElementById('propOut').innerHTML =
+    '<div class="alert alert-warning">⚠️ Run the analysis first — enter 12 months of consumption on the Usage Input tab.</div>'; return; }
+  const p = packs[+document.getElementById('propPick').value];
+  const name = document.getElementById('cName').value || 'Client';
+  const site = document.getElementById('cSite').value || '—';
+  const by = document.getElementById('cPrepBy').value || 'STS Tech Group';
+  const today = new Date().toLocaleDateString('en-ZA',{day:'numeric',month:'long',year:'numeric'});
+  const occ = +document.getElementById('occ').value || 1;
+  const yr5 = (()=>{ const esc = tariff.esc/100; let s = 0; for(let y=1;y<=5;y++) s += p.saving*Math.pow(1+esc,y-1) - p.opex; return s; })();
+
+  document.getElementById('propOut').innerHTML = `
+  <div class="prop-wrap">
+    <div class="prop-hdr">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+        <div>
+          <div style="font-size:11px;letter-spacing:2px;opacity:0.7">STS TECH GROUP</div>
+          <h2 style="font-size:26px;margin:6px 0 4px">Water Security Assessment</h2>
+          <div style="font-size:13px;opacity:0.85">${name} — ${site}</div>
+        </div>
+        <div style="text-align:right;font-size:11px;opacity:0.8">
+          <div>${today}</div><div>${p.name}</div>
+        </div>
+      </div>
+    </div>
+    <div class="prop-body">
+
+      <div class="prop-sec">
+        <h3>Current Position</h3>
+        <div class="prop-grid" style="grid-template-columns:repeat(4,1fr)">
+          <div class="pstat"><div class="pstat-v">${analysis.annKl.toFixed(0)} kl</div><div class="pstat-l">Annual consumption</div></div>
+          <div class="pstat"><div class="pstat-v">R ${fmt(Math.round(analysis.annCost))}</div><div class="pstat-l">Annual water &amp; sanitation cost</div></div>
+          <div class="pstat"><div class="pstat-v">R ${analysis.topMarg.toFixed(2)}</div><div class="pstat-l">Marginal cost per kl</div></div>
+          <div class="pstat"><div class="pstat-v">${Math.round(analysis.lpd)} l</div><div class="pstat-l">Per person per day</div></div>
+        </div>
+        <p style="font-size:12px;color:#555;margin-top:12px;line-height:1.7">
+          ${name} currently draws ${analysis.annKl.toFixed(0)} kl per year across ${occ} occupant(s), of which an estimated
+          ${analysis.annOutdoor.toFixed(0)} kl (${(analysis.annOutdoor/analysis.annKl*100).toFixed(0)}%) is outdoor and irrigation demand.
+          Because the tariff is stepped, the last kilolitres consumed each month are billed at
+          <strong>R${analysis.topMarg.toFixed(2)}/kl</strong> once the sanitation charge is included — roughly
+          ${(analysis.topMarg/(analysis.annCost/analysis.annKl)).toFixed(1)}× the average rate. Every kilolitre displaced by
+          an alternative source is saved at that marginal rate, not the average one.
+        </p>
+      </div>
+
+      <div class="prop-sec">
+        <h3>Recommended Solution — ${p.name}</h3>
+        <table class="prop-table">
+          <thead><tr><th>Component</th><th>Function</th></tr></thead>
+          <tbody>${p.items.map(i=>`<tr><td>${i}</td><td style="color:#666">Included in scope</td></tr>`).join('')}</tbody>
+        </table>
+      </div>
+
+      <div class="prop-sec">
+        <h3>Financial Summary</h3>
+        <div class="prop-grid" style="grid-template-columns:repeat(4,1fr)">
+          <div class="pstat"><div class="pstat-v">R ${fmt(Math.round(p.capex))}</div><div class="pstat-l">Installed capex (excl. VAT)</div></div>
+          <div class="pstat"><div class="pstat-v">R ${fmt(Math.round(p.net))}</div><div class="pstat-l">Net saving year 1</div></div>
+          <div class="pstat"><div class="pstat-v">${p.payback===Infinity?'—':p.payback.toFixed(1)} yrs</div><div class="pstat-l">Simple payback</div></div>
+          <div class="pstat"><div class="pstat-v">R ${fmt(Math.round(p.npv))}</div><div class="pstat-l">${p.life}-year NPV</div></div>
+        </div>
+        <table class="prop-table" style="margin-top:14px">
+          <tbody>
+            <tr><td>Own supply as share of demand</td><td style="text-align:right"><strong>${p.pct.toFixed(0)}%</strong> (${p.kl.toFixed(1)} kl/yr)</td></tr>
+            <tr><td>Levelised cost of own water</td><td style="text-align:right"><strong>R ${p.lcow===Infinity?'—':p.lcow.toFixed(2)}/kl</strong> vs R ${analysis.topMarg.toFixed(2)}/kl municipal</td></tr>
+            <tr><td>Annual operating cost</td><td style="text-align:right">R ${fmt(Math.round(p.opex))}</td></tr>
+            <tr><td>Cumulative saving over 5 years</td><td style="text-align:right"><strong>R ${fmt(Math.round(yr5))}</strong></td></tr>
+            <tr><td>Assumed tariff escalation</td><td style="text-align:right">${tariff.esc}% per annum</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="prop-sec">
+        <h3>Supply Resilience</h3>
+        <p style="font-size:12px;color:#555;line-height:1.7">
+          With ${p.storage} kl of storage${p.boreYield>0?` and ${(p.boreYield*1000).toFixed(0)} litres/day of borehole yield`:''},
+          this installation sustains the property through municipal interruptions and restriction levels independently of
+          the reticulated supply. Storage is assumed to sit at 60% of nominal capacity at the onset of an unplanned event.
+        </p>
+      </div>
+
+      <div class="prop-sec">
+        <h3>Assumptions &amp; Qualifications</h3>
+        <ul style="font-size:11px;color:#666;line-height:1.9;padding-left:18px">
+          <li>Tariff rates are ${tariff.id==='custom'?'client-supplied':'indicative '+tariff.name+' figures'} and must be confirmed against the current municipal schedule before contracting. Municipal tariffs are re-gazetted annually in July.</li>
+          <li>Rainfall yield is modelled on long-term monthly averages. Any single year will vary materially from the average; storage should not be sized on a drought year without an explicit reliability target.</li>
+          <li>Borehole yield is an estimate pending a drilling and test-pump report. Yields are site-specific and no yield is guaranteed prior to drilling.</li>
+          <li>Boreholes and wellpoints must be registered with the municipality. Abstraction may require authorisation from the Department of Water and Sanitation depending on volume.</li>
+          <li>Any water intended for potable use requires a SANS 241 potability test and a treatment train specified against those results.</li>
+          <li>Figures exclude VAT, and exclude any civil works, electrical supply upgrades, or municipal connection alterations not listed in scope.</li>
+          <li>Savings assume consumption remains at the analysed baseline. A material change in occupancy or landscaping will change the outcome.</li>
+        </ul>
+      </div>
+
+      <div style="border-top:2px solid #06131f;padding-top:12px;margin-top:8px;display:flex;justify-content:space-between;font-size:10px;color:#888">
+        <span>STS Tech Group | Water Security Advisor | ${today}</span>
+        <span>Prepared by ${by}</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ---------- NAV ---------- */
+const PAGES = ['usage','tariff','analysis','rain','bore','grey','recs','resilience','proposal'];
+function go(id){
+  PAGES.forEach(p=>{
+    document.getElementById('pg-'+p).classList.toggle('active', p === id);
+    document.querySelectorAll('.tab')[PAGES.indexOf(p)].classList.toggle('active', p === id);
+  });
+  if(id === 'rain') calcRain();
+  if(id === 'bore') calcBore();
+  if(id === 'grey') calcGrey();
+  if(id === 'recs') buildRecs();
+  if(id === 'resilience') calcResilience();
+  if(id === 'proposal') buildProposal();
+}
+
+function fmt(n){ return Math.round(n).toLocaleString('en-ZA'); }
+
+window.addEventListener('load', ()=>{
+  initUse(); refreshTariffs(); initRainTable(); renderEffList();
+});
+</script>
+</body>
+</html>
