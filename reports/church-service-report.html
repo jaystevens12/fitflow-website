@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Church Service Report</title>
+<style>
+  :root {
+    --ink: #1c2430;
+    --muted: #5b6676;
+    --line: #dde2e8;
+    --soft: #f5f7f9;
+    --brand: #1f3a5f;
+    --ok: #1e7a46;
+    --ok-bg: #e7f4ec;
+    --warn: #a15c00;
+    --warn-bg: #fdf1e0;
+    --bad: #b42318;
+    --bad-bg: #fdecea;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #e9ecf0;
+    color: var(--ink);
+    font: 14px/1.45 "Segoe UI", system-ui, -apple-system, Helvetica, Arial, sans-serif;
+  }
+  .toolbar {
+    max-width: 850px;
+    margin: 16px auto 0;
+    padding: 0 16px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  button {
+    font: inherit;
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--ink);
+    padding: 7px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  button.primary { background: var(--brand); border-color: var(--brand); color: #fff; }
+  button.link { border: none; background: none; color: var(--brand); padding: 4px 0; }
+  button.x { border: none; background: none; color: var(--muted); padding: 2px 6px; font-size: 16px; }
+
+  .page {
+    max-width: 850px;
+    margin: 12px auto 32px;
+    background: #fff;
+    padding: 40px 48px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.08);
+  }
+  @media (max-width: 640px) { .page { padding: 24px 16px; } }
+
+  input, select, textarea {
+    font: inherit;
+    color: inherit;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    background: transparent;
+    padding: 3px 5px;
+    width: 100%;
+  }
+  input:hover, textarea:hover, select:hover { border-color: var(--line); }
+  input:focus, textarea:focus, select:focus { outline: none; border-color: var(--brand); background: #fff; }
+  textarea { resize: none; overflow: hidden; }
+
+  /* Header */
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 24px;
+    border-bottom: 3px solid var(--brand);
+    padding-bottom: 14px;
+  }
+  .company input { font-weight: 700; font-size: 18px; color: var(--brand); padding-left: 0; }
+  .company .sub input { font-size: 12px; font-weight: 400; color: var(--muted); }
+  .doc-title { text-align: right; }
+  .doc-title h1 { margin: 0; font-size: 22px; letter-spacing: .5px; }
+  .doc-title input { text-align: right; color: var(--muted); font-size: 12px; padding-right: 0; }
+
+  /* Info grid */
+  .info {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px 16px;
+    margin: 18px 0;
+  }
+  @media (max-width: 640px) { .info { grid-template-columns: 1fr 1fr; } }
+  .info label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); }
+  .info input { padding-left: 0; font-weight: 600; }
+  .info .wide { grid-column: span 2; }
+
+  /* Summary banner */
+  .summary {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 18px;
+    border-radius: 8px;
+    margin-bottom: 22px;
+    background: var(--ok-bg);
+    border-left: 5px solid var(--ok);
+  }
+  .summary.attention { background: var(--warn-bg); border-left-color: var(--warn); }
+  .summary.urgent { background: var(--bad-bg); border-left-color: var(--bad); }
+  .summary .headline { font-size: 17px; font-weight: 700; }
+  .summary .detail { color: var(--muted); font-size: 13px; }
+  .summary .stats { margin-left: auto; display: flex; gap: 18px; text-align: center; }
+  .summary .stats b { display: block; font-size: 20px; }
+  .summary .stats span { font-size: 11px; color: var(--muted); text-transform: uppercase; }
+  @media (max-width: 640px) { .summary { flex-wrap: wrap; } .summary .stats { margin-left: 0; } }
+
+  h2 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--brand);
+    margin: 24px 0 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: var(--muted);
+    font-weight: 600;
+    padding: 6px 4px;
+    background: var(--soft);
+  }
+  td { padding: 3px 4px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  td.area input { font-weight: 600; }
+  .col-status { width: 150px; }
+  .col-x { width: 30px; }
+
+  select.status { font-weight: 600; border-radius: 12px; padding: 3px 8px; }
+  select.status.done { color: var(--ok); background: var(--ok-bg); }
+  select.status.attn { color: var(--warn); background: var(--warn-bg); }
+  select.status.notdone { color: var(--bad); background: var(--bad-bg); }
+  select.status.na { color: var(--muted); background: var(--soft); }
+
+  select.priority { font-weight: 600; }
+  select.priority.High { color: var(--bad); }
+  select.priority.Medium { color: var(--warn); }
+  select.priority.Low { color: var(--muted); }
+
+  .empty { color: var(--muted); font-style: italic; padding: 8px 4px; }
+
+  .notes textarea { border: 1px solid var(--line); min-height: 56px; padding: 8px 10px; }
+  .hint { font-size: 12px; color: var(--muted); margin: 4px 0 0; }
+
+  .photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  @media (max-width: 640px) { .photos { grid-template-columns: 1fr 1fr; } }
+  .photo { position: relative; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  .photo img { display: block; width: 100%; height: 150px; object-fit: cover; }
+  .photo input { font-size: 12px; border-top: 1px solid var(--line); border-radius: 0; }
+  .photo .x { position: absolute; top: 4px; right: 4px; background: rgba(255,255,255,.85); border-radius: 50%; }
+
+  .signoff { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 28px; }
+  .sig { border-top: 1px solid var(--ink); padding-top: 4px; }
+  .sig input { padding-left: 0; }
+  .sig label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+
+  footer { margin-top: 28px; font-size: 11px; color: var(--muted); text-align: center; }
+
+  /* Print: hide editing chrome, keep the document clean */
+  @media print {
+    @page { size: letter; margin: 0.5in; }
+    body { background: #fff; }
+    .toolbar, .no-print, .col-x, td.col-x { display: none !important; }
+    .page { box-shadow: none; margin: 0; padding: 0; max-width: none; }
+    input, select, textarea { border-color: transparent !important; appearance: none; -webkit-appearance: none; }
+    input::-webkit-calendar-picker-indicator { display: none; }
+    ::placeholder { color: transparent; }
+    .notes textarea { border: none; padding: 0; min-height: 0; }
+    .summary, select.status, th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    tr, .photo { break-inside: avoid; }
+    .print-hide-empty.is-empty { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <button onclick="newReport()" title="Keep the company, church and task list; clear this visit's results">New visit</button>
+  <button onclick="window.print()" class="primary">Print / Save as PDF</button>
+</div>
+
+<div class="page" id="report">
+
+  <header>
+    <div class="company">
+      <input data-k="company" value="Your Company Name" aria-label="Company name">
+      <div class="sub"><input data-k="companySub" value="Phone · Email · License #" aria-label="Company contact"></div>
+    </div>
+    <div class="doc-title">
+      <h1>SERVICE REPORT</h1>
+      <input data-k="reportNo" value="Report #0001" aria-label="Report number">
+    </div>
+  </header>
+
+  <div class="info">
+    <div class="wide"><label>Client</label><input data-k="client" value="[Church Name]"></div>
+    <div class="wide"><label>Location</label><input data-k="location" value="[Address], Virginia"></div>
+    <div><label>Service date</label><input data-k="date" type="date"></div>
+    <div><label>Time on site</label><input data-k="time" value="8:00 AM – 11:30 AM"></div>
+    <div><label>Service type</label><input data-k="serviceType" value="Scheduled service"></div>
+    <div><label>Technician / crew</label><input data-k="tech" value=""></div>
+  </div>
+
+  <!-- Auto-generated: the one line a busy reader needs -->
+  <div class="summary" id="summary">
+    <div>
+      <div class="headline" id="sumHead"></div>
+      <div class="detail" id="sumDetail"></div>
+    </div>
+    <div class="stats">
+      <div><b id="statDone">0</b><span>Completed</span></div>
+      <div><b id="statAttn">0</b><span>Flagged</span></div>
+    </div>
+  </div>
+
+  <h2>Work Completed</h2>
+  <table>
+    <thead>
+      <tr><th style="width:28%">Area</th><th>Task</th><th class="col-status">Status</th><th class="col-x"></th></tr>
+    </thead>
+    <tbody id="tasks"></tbody>
+  </table>
+  <button class="link no-print" onclick="addTask()">+ Add task</button>
+
+  <div class="print-hide-empty" id="issuesSection">
+    <h2>Items Needing Attention</h2>
+    <table>
+      <thead>
+        <tr><th style="width:24%">Item</th><th style="width:20%">Location</th><th>Recommended action</th><th style="width:100px">Priority</th><th class="col-x"></th></tr>
+      </thead>
+      <tbody id="issues"></tbody>
+    </table>
+    <div class="empty" id="noIssues">No issues found during this visit.</div>
+    <button class="link no-print" onclick="addIssue()">+ Add item</button>
+  </div>
+
+  <div class="notes print-hide-empty" id="notesSection">
+    <h2>Notes &amp; Highlights</h2>
+    <textarea data-k="notes" maxlength="400" rows="2" placeholder="Optional — one or two sentences worth calling out (e.g. extra work done, client request, access issue)."></textarea>
+    <p class="hint no-print">Keep it short. Anything not written here is assumed normal. Left blank, this section doesn't print.</p>
+  </div>
+
+  <div class="print-hide-empty" id="photosSection">
+    <h2>Photos</h2>
+    <div class="photos" id="photos"></div>
+    <label class="no-print"><button class="link" onclick="document.getElementById('photoInput').click()">+ Add photos</button></label>
+    <input type="file" id="photoInput" accept="image/*" multiple hidden>
+  </div>
+
+  <div class="signoff">
+    <div class="sig"><input data-k="techSign" placeholder="Name"><label>Technician signature</label></div>
+    <div class="sig"><input data-k="clientSign" placeholder="Name"><label>Church representative</label></div>
+  </div>
+
+  <footer>Thank you for the opportunity to serve your congregation.</footer>
+</div>
+
+<script>
+const STORE = 'churchServiceReport.v1';
+const STATUS = [
+  ['done', '✓ Completed'],
+  ['attn', '⚠ Needs attention'],
+  ['notdone', '✕ Not completed'],
+  ['na', '— N/A'],
+];
+const DEFAULT_TASKS = [
+  ['Sanctuary', 'Service completed per scope'],
+  ['Fellowship hall', 'Service completed per scope'],
+  ['Restrooms', 'Service completed per scope'],
+  ['Entrances & lobby', 'Service completed per scope'],
+  ['Classrooms / offices', 'Service completed per scope'],
+  ['Exterior & grounds', 'Service completed per scope'],
+];
+
+let state = load() || {
+  fields: {},
+  tasks: DEFAULT_TASKS.map(([area, task]) => ({ area, task, status: 'done' })),
+  issues: [],
+  photos: [],
+};
+
+function load() { try { return JSON.parse(localStorage.getItem(STORE)); } catch (e) { return null; } }
+function save() { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) { /* storage unavailable or full: report still works */ } }
+function esc(s) { return String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+function autosize(t) { t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px'; }
+
+/* ---- Simple fields ---- */
+document.querySelectorAll('[data-k]').forEach(el => {
+  const k = el.dataset.k;
+  if (state.fields[k] !== undefined) el.value = state.fields[k];
+  else if (k === 'date') el.value = new Date().toISOString().slice(0, 10);
+  el.addEventListener('input', () => {
+    state.fields[k] = el.value;
+    if (el.tagName === 'TEXTAREA') autosize(el);
+    save(); refresh();
+  });
+});
+
+/* ---- Tasks ---- */
+function renderTasks() {
+  document.getElementById('tasks').innerHTML = state.tasks.map((t, i) => `
+    <tr>
+      <td class="area"><input value="${esc(t.area)}" oninput="state.tasks[${i}].area=this.value;save()"></td>
+      <td><input value="${esc(t.task)}" oninput="state.tasks[${i}].task=this.value;save()"></td>
+      <td class="col-status"><select class="status ${t.status}" onchange="setStatus(${i}, this.value)">
+        ${STATUS.map(([v, l]) => `<option value="${v}" ${v === t.status ? 'selected' : ''}>${l}</option>`).join('')}
+      </select></td>
+      <td class="col-x"><button class="x" title="Remove" onclick="state.tasks.splice(${i},1);save();renderTasks();refresh()">×</button></td>
+    </tr>`).join('');
+}
+function setStatus(i, v) {
+  const t = state.tasks[i];
+  t.status = v;
+  // Flagging a task adds a matching line under "Items needing attention" so the detail lives in one place
+  if ((v === 'attn' || v === 'notdone') && !state.issues.some(x => x.fromTask === i)) {
+    state.issues.push({ item: t.task, location: t.area, action: '', priority: v === 'notdone' ? 'High' : 'Medium', fromTask: i });
+    renderIssues();
+  }
+  save(); renderTasks(); refresh();
+}
+function addTask() { state.tasks.push({ area: '', task: '', status: 'done' }); save(); renderTasks(); refresh(); }
+
+/* ---- Issues ---- */
+function renderIssues() {
+  document.getElementById('issues').innerHTML = state.issues.map((x, i) => `
+    <tr>
+      <td><input value="${esc(x.item)}" placeholder="What" oninput="state.issues[${i}].item=this.value;save()"></td>
+      <td><input value="${esc(x.location)}" placeholder="Where" oninput="state.issues[${i}].location=this.value;save()"></td>
+      <td><input value="${esc(x.action)}" placeholder="What should happen next" oninput="state.issues[${i}].action=this.value;save()"></td>
+      <td><select class="priority ${x.priority}" onchange="state.issues[${i}].priority=this.value;this.className='priority '+this.value;save();refresh()">
+        ${['High', 'Medium', 'Low'].map(p => `<option ${p === x.priority ? 'selected' : ''}>${p}</option>`).join('')}
+      </select></td>
+      <td class="col-x"><button class="x" title="Remove" onclick="state.issues.splice(${i},1);save();renderIssues();refresh()">×</button></td>
+    </tr>`).join('');
+  document.getElementById('noIssues').style.display = state.issues.length ? 'none' : '';
+}
+function addIssue() { state.issues.push({ item: '', location: '', action: '', priority: 'Medium' }); save(); renderIssues(); refresh(); }
+
+/* ---- Photos (kept small so they fit in browser storage) ---- */
+function renderPhotos() {
+  document.getElementById('photos').innerHTML = state.photos.map((p, i) => `
+    <div class="photo">
+      <img src="${p.src}" alt="">
+      <input value="${esc(p.caption)}" placeholder="Caption" oninput="state.photos[${i}].caption=this.value;save()">
+      <button class="x no-print" title="Remove" onclick="state.photos.splice(${i},1);save();renderPhotos();refresh()">×</button>
+    </div>`).join('');
+}
+document.getElementById('photoInput').addEventListener('change', e => {
+  [...e.target.files].forEach(file => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, 900 / Math.max(img.width, img.height));
+      const c = document.createElement('canvas');
+      c.width = img.width * scale; c.height = img.height * scale;
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      state.photos.push({ src: c.toDataURL('image/jpeg', 0.75), caption: '' });
+      URL.revokeObjectURL(img.src);
+      save(); renderPhotos(); refresh();
+    };
+    img.src = URL.createObjectURL(file);
+  });
+  e.target.value = '';
+});
+
+/* ---- Summary banner ---- */
+function refresh() {
+  const counted = state.tasks.filter(t => t.status !== 'na');
+  const done = counted.filter(t => t.status === 'done').length;
+  const notDone = counted.filter(t => t.status === 'notdone').length;
+  const high = state.issues.filter(x => x.priority === 'High').length;
+  const flagged = state.issues.length;
+
+  const box = document.getElementById('summary');
+  box.className = 'summary' + (high || notDone ? ' urgent' : flagged ? ' attention' : '');
+  document.getElementById('sumHead').textContent =
+    high || notDone ? 'Service performed — action required'
+    : flagged ? 'Service completed — items noted for follow-up'
+    : 'Service completed — all clear';
+  document.getElementById('sumDetail').textContent =
+    `${done} of ${counted.length} tasks completed` +
+    (flagged ? ` · ${flagged} item${flagged > 1 ? 's' : ''} need${flagged > 1 ? '' : 's'} attention` + (high ? ` (${high} high priority)` : '') : ' · no issues found');
+  document.getElementById('statDone').textContent = done;
+  document.getElementById('statAttn').textContent = flagged;
+
+  // Optional sections drop out of the printed copy when empty, keeping the report short
+  document.getElementById('notesSection').classList.toggle('is-empty', !(state.fields.notes || '').trim());
+  document.getElementById('photosSection').classList.toggle('is-empty', !state.photos.length);
+}
+
+/* ---- New visit: keep the template, clear the results ---- */
+function newReport() {
+  if (!confirm('Start a new visit? Task statuses, issues, notes, photos and signatures will be cleared. Company, church and task list stay.')) return;
+  state.tasks.forEach(t => t.status = 'done');
+  state.issues = []; state.photos = [];
+  ['notes', 'techSign', 'clientSign'].forEach(k => delete state.fields[k]);
+  state.fields.date = new Date().toISOString().slice(0, 10);
+  const m = (state.fields.reportNo || 'Report #0000').match(/(\d+)(?!.*\d)/);
+  if (m) state.fields.reportNo = (state.fields.reportNo || 'Report #0000').replace(/(\d+)(?!.*\d)/, String(+m[1] + 1).padStart(m[1].length, '0'));
+  save(); location.reload();
+}
+
+renderTasks(); renderIssues(); renderPhotos(); refresh();
+document.querySelectorAll('textarea').forEach(autosize);
+</script>
+</body>
+</html>
