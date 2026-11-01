@@ -1,0 +1,56 @@
+# LinkedIn head-of-marketing agent: settings
+
+# auto   = post straight to LinkedIn every day (you still get the daily briefing issue)
+# review = open a GitHub issue with the draft; add the label "approve-post" to publish it
+publish_mode: auto
+
+# Morning email with today's post and your briefing
+email:
+  to: stevensjay2@gmail.com
+  send_at: "06:00"   # local time (market.timezone). The post goes live at the same moment in auto mode.
+
+# Days the agent posts (0=Mon … 6=Sun). It still writes your market briefing every day.
+post_days: [0, 1, 2, 3, 4, 5, 6]
+
+# Model used for research and writing
+model: claude-opus-5-5
+effort: high
+
+# Market focus for the daily research
+market:
+  country_code: ZA
+  timezone: Africa/Johannesburg
+  focus: >
+    South African solar PV and battery storage: Eskom tariffs and NERSA decisions,
+    municipal tariffs, grid constraints and wheeling, the electricity market reform
+    (Electricity Regulation Amendment Act, trading platform), REIPPPP/BESIPPPP rounds,
+    C&I solar and storage deals, tax incentives, component pricing and supply,
+    and the global solar and storage trends that affect SA buyers.
+
+# Weekly content plan: one pillar per weekday.
+pillars:
+  0:  # Monday
+    name: Market pulse
+    brief: Unpack one significant piece of SA energy news from the past week and what it means for businesses and homeowners.
+  1:  # Tuesday
+    name: In the field
+    brief: Show what I'm doing. Turn a recent activity-log entry into a story with a lesson for the reader.
+  2:  # Wednesday
+    name: Insight & education
+    brief: Explain one concept people get wrong (tariff structures, battery sizing, payback maths, TOU arbitrage), using a concrete worked example.
+  3:  # Thursday
+    name: Industry conversation
+    brief: Open up a market-relevant debate or trend and ask peers a sharp, specific question.
+  4:  # Friday
+    name: Week in review
+    brief: What I worked on this week plus one market signal worth watching next week.
+  5:  # Saturday
+    name: Leadership & perspective
+    brief: A short, reflective founder perspective on building in the SA energy sector.
+  6:  # Sunday
+    name: Big picture
+    brief: A global solar or storage trend and how it is likely to land in South Africa.
+
+hashtags:
+  max: 4
+  pool: [SolarEnergy, BatteryStorage, RenewableEnergy, SouthAfrica, Eskom, EnergyTransition, CleanEnergy, CommercialSolar, EnergySecurity]

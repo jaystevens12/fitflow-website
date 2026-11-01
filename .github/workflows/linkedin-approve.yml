@@ -1,0 +1,42 @@
+name: LinkedIn – publish approved draft
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: linkedin-agent
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.event.label.name == 'approve-post' && github.event.issue.user.login == 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install -r marketing/agent/requirements.txt
+
+      - name: Publish to LinkedIn
+        env:
+          LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
+          LINKEDIN_PERSON_URN: ${{ vars.LINKEDIN_PERSON_URN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python marketing/agent/publish_approved.py
+
+      - name: Save post history
+        if: success()
+        run: |
+          git config user.name "linkedin-agent"
+          git config user.email "linkedin-agent@users.noreply.github.com"
+          git add marketing/history.jsonl
+          git diff --cached --quiet || git commit -m "LinkedIn agent: published approved post #${{ github.event.issue.number }}"
+          git pull --rebase && git push
