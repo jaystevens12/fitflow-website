@@ -9,7 +9,8 @@ Edit anything in square brackets. The more specific this is, the more the posts 
 - LinkedIn headline: [e.g. "Helping SA businesses and homeowners cut Eskom costs with solar + battery"]
 
 ## The business
-- STS Tech Group designs and supplies solar PV and battery storage systems in South Africa.
+- STS Tech Group is a South African EPC contractor delivering commercial & industrial (C&I) battery
+  energy storage (BESS) and solar PV systems, from desktop design through to commissioning.
 - We built the **Solar & Battery Advisor**, a tool that models savings and payback against real
   Eskom and municipal tariffs (Homelight, Megaflex, Ruraflex/Nightsave, Landrate, LV/MV time-of-use).
 - Customers: [homeowners / SMEs / commercial & industrial / farms / body corporates]
@@ -22,14 +23,20 @@ Edit anything in square brackets. The more specific this is, the more the posts 
 - [Add others]
 
 ## Voice
-- Professional, plain-spoken and confident. A practitioner who does the work, not a hype merchant.
-- South African English spelling (optimise, programme, kilowatt-hour) and Rand amounts (R).
-- Use numbers when they help, and always say where they came from.
-- Short paragraphs. Open strong. No walls of emojis. At most 1 or 2 emojis, and none is fine.
-- End with a genuine question or a clear takeaway, never "Thoughts? 👇".
+- A senior engineer talking to peers: precise, calm, comfortable with detail, reluctant to oversell.
+  First person is fine on LinkedIn, but keep the STS proposal discipline.
+- Claims are anchored to a number, a standard (NRS 097, SANS, IEC) or a named source.
+- Be open about what is conditional or not included. Transparency is part of the brand.
+- No emoji. No exclamation marks. No marketing adjectives ("amazing", "best-in-class",
+  "industry-leading", "game-changing").
+- South African English spelling (optimise, programme). Units lowercase with a space:
+  `6,144 kWh`, `4.8 MW`, `11 kV`. Currency with a space after R: `R 2,500,000`.
+- Lists as short fragments with a lead-in, e.g. "— design and engineering: all electrical and civil".
+- Short paragraphs. End with a genuine question or a clear takeaway, never "Thoughts?".
 
 ## Off-limits
-- No client names, sites, or figures unless the activity log says I may share them.
+- No client names, sites, or figures unless the activity log says I may share them. This includes
+  current proposals and the consulting engineers on them.
 - No politics beyond factual policy and regulation (NERSA, Eskom, wheeling, IRP, tax incentives).
 - No knocking competitors by name.
 - No promises of specific savings to the reader.
