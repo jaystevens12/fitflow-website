@@ -1,13 +1,13 @@
 # LinkedIn head-of-marketing agent
 
-Every morning at **07:17 South African time** this agent:
+Every morning at **06:00 South African time** this agent emails **stevensjay2@gmail.com** with today's post and a market briefing. Before that it:
 
 1. **Researches the market.** Claude searches the web for the past week's SA solar and battery news:
    NERSA and Eskom decisions, municipal tariffs, wheeling and market reform, IPP rounds, C&I deals,
    component prices, and the global trends that matter here.
 2. **Briefs you.** It writes a private morning briefing (top stories, what they mean for STS Tech Group,
-   talking points for client meetings, what to watch). You get it as a GitHub issue, which GitHub
-   emails to you, and it's saved in `marketing/briefings/`.
+   talking points for client meetings, what to watch). It is emailed to you at 06:00, logged as a
+   GitHub issue, and saved in `marketing/briefings/`.
 3. **Writes and posts to your LinkedIn.** One post a day in your voice, following a weekly content plan
    that mixes what you're doing in the field with market commentary and industry questions.
 4. **Checks itself first.** An editor pass confirms every figure has a source, nothing confidential
@@ -39,7 +39,15 @@ Create a key at <https://console.anthropic.com> → API keys.
 In GitHub: **Settings → Secrets and variables → Actions → New repository secret**:
 - `ANTHROPIC_API_KEY` = your key
 
-### 3. LinkedIn app (lets the agent post as you)
+### 3. Gmail (sends your 06:00 email)
+1. Your Google account needs 2-Step Verification on: <https://myaccount.google.com/security>.
+2. Create an app password at <https://myaccount.google.com/apppasswords> (name it "LinkedIn agent").
+3. In GitHub add the secret `GMAIL_APP_PASSWORD` = the 16-character password.
+
+The email is sent from and to stevensjay2@gmail.com. To send from another Gmail account, add a
+variable `GMAIL_ADDRESS`. To change the recipient or time, edit `email:` in `config.yml`.
+
+### 4. LinkedIn app (lets the agent post as you)
 1. Go to <https://www.linkedin.com/developers/apps> → **Create app**. It needs a LinkedIn Company Page;
    use the STS Tech Group page.
 2. In **Products**, add **Share on LinkedIn** and **Sign In with LinkedIn using OpenID Connect**.
@@ -57,10 +65,14 @@ In GitHub: **Settings → Secrets and variables → Actions → New repository s
 LinkedIn tokens last **60 days**. The daily issue warns you a week before expiry; re-run step 4
 and update the secret. If a token does expire, posts are saved as drafts, so nothing is lost.
 
-### 4. Turn it on
+### 5. Turn it on
 Scheduled workflows only run from the repo's **default branch**, so merge this branch into `main`.
 Then do a test run: **Actions → "LinkedIn – daily post" → Run workflow** with **Dry run** ticked.
-You'll get an issue with the briefing and the draft post, and nothing is published.
+Manual runs skip the wait, so the email arrives within about 10 minutes. Nothing is published.
+
+**Timing:** the job starts at 05:35, does its research, then waits and sends at 06:00. In auto mode the
+LinkedIn post goes live at the same moment. GitHub occasionally starts scheduled jobs late on busy
+mornings, so an email can now and then arrive a few minutes after 06:00.
 
 ---
 

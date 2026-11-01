@@ -12,6 +12,7 @@ import datetime as dt
 import json
 import os
 import sys
+import time
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -20,6 +21,7 @@ import yaml
 from pydantic import BaseModel, Field
 
 sys.path.insert(0, str(Path(__file__).parent))
+import emailer  # noqa: E402
 import github_issues  # noqa: E402
 import linkedin  # noqa: E402
 
@@ -221,6 +223,19 @@ def token_expiry_warning(today: dt.date) -> str:
     return ""
 
 
+def wait_until(send_at: str, tz: ZoneInfo, max_wait_min: int = 45) -> None:
+    """Hold until the configured local send time (the run starts a little early)."""
+    if os.environ.get("NO_WAIT", "").lower() == "true":
+        return
+    hh, mm = (int(x) for x in send_at.split(":"))
+    now = dt.datetime.now(tz)
+    target = now.replace(hour=hh, minute=mm, second=0, microsecond=0)
+    secs = (target - now).total_seconds()
+    if 0 < secs <= max_wait_min * 60:
+        print(f"Ready early; waiting {secs / 60:.0f} min until {send_at}.")
+        time.sleep(secs)
+
+
 def main() -> int:
     cfg = yaml.safe_load(read(ROOT / "config.yml"))
     tz = ZoneInfo(cfg["market"]["timezone"])
@@ -244,6 +259,9 @@ def main() -> int:
     (ROOT / "briefings" / f"{today.isoformat()}.md").write_text(
         f"# Market briefing, {today:%A %d %B %Y}\n\n{out.briefing_markdown}\n\n"
         f"---\n\n## Research notes\n\n{brief}\n", encoding="utf-8")
+
+    email_cfg = cfg.get("email") or {}
+    wait_until(email_cfg.get("send_at", "06:00"), tz)
 
     review = out.self_review
     passed = review.facts_supported and review.confidentiality_ok and review.on_voice
@@ -300,6 +318,21 @@ _{out.topic}_
 
     append_history({"date": today.isoformat(), "pillar": out.pillar, "topic": out.topic, "status": status,
                     "url": post_url, "issue": issue_number, "text": out.post_text, "sources": out.sources})
+    if to := email_cfg.get("to"):
+        url = github_issues.issue_url(issue_number)
+        status_line = {"published": "Posted to your LinkedIn this morning.",
+                       "draft": f"Draft, not posted yet. {reason}",
+                       "briefing_only": reason}[status]
+        action = ((post_url, "View on LinkedIn") if status == "published"
+                  else (url, "Review and approve") if status == "draft" and url
+                  else ("", ""))
+        tag = {"published": "Posted", "draft": "Draft for approval", "briefing_only": "Briefing"}[status]
+        try:
+            emailer.send(to, f"{tag} · {today:%a %d %b}: {out.topic}", status_line, out.post_text,
+                         out.sources, out.briefing_markdown, *action)
+        except Exception as e:  # email trouble must not lose the day's work
+            print(f"Email failed: {e}")
+
     print(body)
     return 0
 

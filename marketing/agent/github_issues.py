@@ -42,6 +42,13 @@ def create_issue(title: str, body: str, labels: list[str], close: bool = False) 
     return number
 
 
+def issue_url(number: int | None) -> str:
+    repo = os.environ.get("GITHUB_REPOSITORY")
+    if not (number and repo):
+        return ""
+    return f"{os.environ.get('GITHUB_SERVER_URL', 'https://github.com')}/{repo}/issues/{number}"
+
+
 def extract_post(body: str) -> str | None:
     m = re.search(re.escape(POST_START) + r"\s*(.*?)\s*" + re.escape(POST_END), body or "", re.S)
     return m.group(1).strip() if m else None

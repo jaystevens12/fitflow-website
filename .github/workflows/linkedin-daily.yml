@@ -2,7 +2,7 @@ name: LinkedIn – daily post
 
 on:
   schedule:
-    - cron: "17 5 * * *"   # 07:17 South Africa time, every day
+    - cron: "35 3 * * *"   # 05:35 South Africa time; the agent waits and sends at 06:00
   workflow_dispatch:
     inputs:
       today_note:
@@ -32,7 +32,7 @@ concurrency:
 jobs:
   post:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
 
@@ -54,6 +54,9 @@ jobs:
           TODAY_NOTE: ${{ inputs.today_note }}
           PUBLISH_MODE_OVERRIDE: ${{ inputs.mode != 'config' && inputs.mode || '' }}
           DRY_RUN: ${{ inputs.dry_run }}
+          NO_WAIT: ${{ github.event_name == 'workflow_dispatch' }}
+          GMAIL_ADDRESS: ${{ vars.GMAIL_ADDRESS }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
         run: python marketing/agent/run_daily.py
 
       - name: Save briefing and post history

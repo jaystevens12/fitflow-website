@@ -2,3 +2,4 @@ anthropic>=2.3.0,<3
 pydantic>=2.7,<3
 PyYAML>=6.0,<7
 requests>=2.32,<3
+markdown>=3.6,<4

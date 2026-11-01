@@ -4,6 +4,11 @@
 # review = open a GitHub issue with the draft; add the label "approve-post" to publish it
 publish_mode: auto
 
+# Morning email with today's post and your briefing
+email:
+  to: stevensjay2@gmail.com
+  send_at: "06:00"   # local time (market.timezone). The post goes live at the same moment in auto mode.
+
 # Days the agent posts (0=Mon … 6=Sun). It still writes your market briefing every day.
 post_days: [0, 1, 2, 3, 4, 5, 6]
 
