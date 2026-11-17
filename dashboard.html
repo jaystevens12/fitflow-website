@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>FitFlow Coach</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Layout: sticky header + summary strip, then a profile sidebar beside a tabbed main area (Training / Nutrition / Health / Research). */
+:root {
+  --bg: #eef1ef; --surface: #ffffff; --surface-2: #f5f7f6; --ink: #142019; --muted: #56665e; --line: #d8dfdb;
+  --accent: #c9440c; --accent-ink: #ffffff;
+  --train: #c9440c; --fuel: #23804a; --recover: #3655c4; --warn: #9a6a12;
+  --train-soft: rgba(201,68,12,.10); --fuel-soft: rgba(35,128,74,.11); --recover-soft: rgba(54,85,196,.10);
+  --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --body: "Barlow", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --radius: 10px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0e1412; --surface: #151d1a; --surface-2: #1b2521; --ink: #e6ede9; --muted: #96a59d; --line: #29352f;
+  --accent: #ff7b3f; --accent-ink: #1a0d05;
+  --train: #ff7b3f; --fuel: #4fc47c; --recover: #8199ff; --warn: #e2b04d;
+  --train-soft: rgba(255,123,63,.13); --fuel-soft: rgba(79,196,124,.13); --recover-soft: rgba(129,153,255,.14);
+  color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0e1412; --surface: #151d1a; --surface-2: #1b2521; --ink: #e6ede9; --muted: #96a59d; --line: #29352f;
+  --accent: #ff7b3f; --accent-ink: #1a0d05;
+  --train: #ff7b3f; --fuel: #4fc47c; --recover: #8199ff; --warn: #e2b04d;
+  --train-soft: rgba(255,123,63,.13); --fuel-soft: rgba(79,196,124,.13); --recover-soft: rgba(129,153,255,.14);
+  color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+.wrap { max-width: 1320px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--display); font-weight: 700; letter-spacing: .01em; margin: 0; text-wrap: balance; line-height: 1.1; }
+h2 { font-size: 1.75rem; }
+h3 { font-size: 1.25rem; }
+p { margin: 0; }
+a { color: var(--recover); }
+.num { font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+.eyebrow { font-size: .72rem; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+button, select, input { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Header */
+header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 9; background: var(--surface); border-bottom: 1px solid var(--line); }
+.top .wrap { display: flex; align-items: center; gap: 16px; padding-block: 12px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 10px; margin-right: auto; }
+.plate { width: 34px; height: 34px; border-radius: 50%; background: var(--accent); position: relative; flex: none; }
+.plate::after { content: ""; position: absolute; inset: 11px; border-radius: 50%; background: var(--surface); }
+.brand h1 { font-size: 1.6rem; text-transform: uppercase; letter-spacing: .04em; }
+.brand small { display: block; font-size: .78rem; color: var(--muted); font-weight: 500; }
+.btn { border: 1px solid var(--line); background: var(--surface-2); border-radius: 8px; padding: 9px 14px; cursor: pointer; font-weight: 600; }
+.btn:hover { border-color: var(--muted); }
+.btn-primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-family: var(--display); font-size: 1.15rem; letter-spacing: .04em; text-transform: uppercase; padding: 9px 20px; }
+.btn-primary:hover { filter: brightness(1.07); border-color: var(--accent); }
+.btn-primary .spin { display: inline-block; transition: transform .5s ease; }
+.btn-primary.go .spin { transform: rotate(360deg); }
+
+/* Summary strip */
+.strip { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; padding-block: 18px 6px; }
+.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; display: grid; gap: 4px; min-width: 0; }
+.kpi .val { font-family: var(--display); font-size: 1.9rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.kpi .val small { font-size: 1rem; color: var(--muted); font-weight: 600; }
+.kpi .sub { font-size: .8rem; color: var(--muted); }
+.bar { height: 6px; border-radius: 3px; background: var(--surface-2); border: 1px solid var(--line); overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--c, var(--accent)); border-radius: 3px; transition: width .4s ease; }
+.k-train { --c: var(--train); } .k-fuel { --c: var(--fuel); } .k-rec { --c: var(--recover); }
+.kpi .eyebrow { display: flex; align-items: center; gap: 6px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c); flex: none; }
+
+/* Layout */
+.layout { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 20px; padding-block: 14px 48px; align-items: start; }
+aside.profile { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 76px); display: grid; gap: 12px; }
+.profile .note { font-size: .78rem; color: var(--muted); background: var(--surface-2); border-radius: 6px; padding: 8px 10px; }
+.field { display: grid; gap: 4px; }
+.field label { font-size: .78rem; font-weight: 600; color: var(--muted); }
+.field select, .field input { width: 100%; background: var(--surface-2); border: 1px solid var(--line); border-radius: 7px; padding: 8px 10px; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+details.profile-toggle > summary { display: none; }
+
+nav.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin-bottom: 18px; overflow-x: auto; }
+nav.tabs a { text-decoration: none; color: var(--muted); font-family: var(--display); font-weight: 600; font-size: 1.15rem; letter-spacing: .03em; text-transform: uppercase; padding: 8px 14px; border-bottom: 3px solid transparent; white-space: nowrap; }
+nav.tabs a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--tc, var(--accent)); }
+nav.tabs a:hover { color: var(--ink); }
+.view[hidden] { display: none; }
+
+.section-head { display: flex; align-items: end; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.section-head p { color: var(--muted); max-width: 68ch; font-size: .92rem; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; min-width: 0; }
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.stack { display: grid; gap: 14px; }
+.chip { display: inline-flex; align-items: center; gap: 5px; font-size: .72rem; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; background: var(--surface-2); color: var(--muted); border: 1px solid var(--line); white-space: nowrap; }
+.chip.train { background: var(--train-soft); color: var(--train); border-color: transparent; }
+.chip.fuel { background: var(--fuel-soft); color: var(--fuel); border-color: transparent; }
+.chip.rec { background: var(--recover-soft); color: var(--recover); border-color: transparent; }
+
+/* Week plan */
+.plan-meta { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 14px; margin-bottom: 14px; }
+.phase { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 10px; }
+.phase div { border-radius: 6px; padding: 7px 8px; background: var(--surface-2); border: 1px solid var(--line); font-size: .78rem; }
+.phase div b { display: block; font-family: var(--display); font-size: 1rem; }
+.phase div.deload { border-style: dashed; }
+.week { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 14px; align-items: start; }
+.day { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; min-width: 0; }
+.day.done { border-color: var(--fuel); }
+.day-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--line); background: var(--surface-2); }
+.day-head .dname { font-family: var(--display); font-size: 1.3rem; font-weight: 700; text-transform: uppercase; width: 42px; }
+.day-head .dtitle { font-weight: 600; flex: 1; min-width: 0; }
+.day-head .dtitle small { display: block; color: var(--muted); font-weight: 500; font-size: .78rem; }
+.donebox { display: inline-flex; align-items: center; gap: 6px; font-size: .8rem; font-weight: 600; cursor: pointer; color: var(--muted); }
+.donebox input { width: 18px; height: 18px; accent-color: var(--fuel); }
+.day-body { padding: 12px 14px; display: grid; gap: 12px; }
+.block-label { font-size: .7rem; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+ol.ex { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+ol.ex li { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 8px; align-items: start; padding: 7px 0; border-top: 1px solid var(--line); }
+ol.ex li:first-child { border-top: 0; }
+.ex-n { font-family: var(--display); font-weight: 700; color: var(--train); font-size: 1.05rem; line-height: 1.3; }
+.ex-name { font-weight: 600; line-height: 1.3; }
+.ex-scheme { font-size: .82rem; font-variant-numeric: tabular-nums; }
+.ex-scheme b { font-weight: 600; }
+.ex-cue { font-size: .78rem; color: var(--muted); }
+.swap { border: 1px solid var(--line); background: transparent; border-radius: 6px; width: 30px; height: 30px; cursor: pointer; color: var(--muted); font-size: 1rem; line-height: 1; }
+.swap:hover { color: var(--train); border-color: var(--train); }
+.cardio { border-left: 3px solid var(--recover); padding: 6px 10px; background: var(--recover-soft); border-radius: 0 6px 6px 0; font-size: .85rem; }
+.cardio b { display: block; }
+.warm { font-size: .82rem; color: var(--muted); }
+.rest-note { font-size: .88rem; color: var(--muted); }
+
+/* Volume chart */
+.vol { display: grid; gap: 6px; }
+.vol-row { display: grid; grid-template-columns: 88px minmax(0, 1fr) 36px; gap: 8px; align-items: center; font-size: .82rem; }
+.vol-track { position: relative; height: 14px; background: var(--surface-2); border-radius: 3px; border: 1px solid var(--line); }
+.vol-band { position: absolute; top: 0; bottom: 0; background: var(--fuel-soft); border-left: 1px dashed var(--fuel); border-right: 1px dashed var(--fuel); }
+.vol-fill { position: absolute; left: 0; top: 2px; bottom: 2px; border-radius: 2px; background: var(--train); }
+.vol-fill.low { background: var(--warn); }
+.vol-axis { display: grid; grid-template-columns: 88px minmax(0, 1fr) 36px; gap: 8px; font-size: .7rem; color: var(--muted); }
+.vol-axis div { display: flex; justify-content: space-between; }
+
+/* Nutrition */
+.macro-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.macro { padding: 12px; border-radius: 8px; background: var(--surface-2); border: 1px solid var(--line); }
+.macro .val { font-family: var(--display); font-size: 1.8rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.macro .val small { font-size: .95rem; color: var(--muted); }
+.macro-bar { display: flex; height: 12px; border-radius: 6px; overflow: hidden; margin-top: 12px; }
+.macro-bar i { display: block; height: 100%; }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: .78rem; color: var(--muted); margin-top: 6px; }
+.legend span { display: inline-flex; align-items: center; gap: 5px; }
+.legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.meals { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.meals li { display: grid; grid-template-columns: 84px minmax(0, 1fr) auto; gap: 10px; padding: 9px 0; border-top: 1px solid var(--line); align-items: baseline; }
+.meals li:first-child { border-top: 0; }
+.meals .when { font-size: .72rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.meals .p { font-size: .82rem; font-variant-numeric: tabular-nums; color: var(--fuel); font-weight: 600; white-space: nowrap; }
+ul.tips { margin: 0; padding-left: 18px; display: grid; gap: 7px; font-size: .9rem; }
+ul.tips li::marker { color: var(--muted); }
+.tiny { font-size: .76rem; color: var(--muted); }
+.src { font-size: .74rem; color: var(--muted); }
+
+/* Health */
+.habits { display: grid; gap: 4px; }
+.habit { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 7px; border: 1px solid var(--line); background: var(--surface-2); cursor: pointer; font-size: .9rem; }
+.habit input { width: 18px; height: 18px; accent-color: var(--fuel); flex: none; }
+.habit.on { border-color: var(--fuel); }
+.heat { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 10px; }
+.heat div { text-align: center; font-size: .72rem; color: var(--muted); display: grid; gap: 3px; }
+.heat i { display: block; height: 28px; border-radius: 5px; border: 1px solid var(--line); background: var(--surface-2); position: relative; overflow: hidden; }
+.heat i b { position: absolute; left: 0; right: 0; bottom: 0; background: var(--fuel); }
+table.zones { width: 100%; border-collapse: collapse; font-size: .86rem; }
+table.zones th, table.zones td { text-align: left; padding: 7px 6px; border-top: 1px solid var(--line); }
+table.zones th { font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; border-top: 0; }
+table.zones td.num { white-space: nowrap; }
+.tablewrap { overflow-x: auto; }
+.target { display: flex; align-items: baseline; gap: 8px; }
+.target .val { font-family: var(--display); font-size: 1.6rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* Research */
+.refs { display: grid; gap: 10px; }
+.ref { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); }
+.ref:first-child { border-top: 0; }
+.ref p { font-size: .9rem; }
+.ref .src { margin-top: 3px; }
+.disclaimer { margin-top: 18px; font-size: .8rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 12px; }
+
+@media (max-width: 1100px) { .strip { grid-template-columns: repeat(3, minmax(0, 1fr)); } .plan-meta { grid-template-columns: 1fr; } .grid3 { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 860px) {
+  .layout { grid-template-columns: 1fr; }
+  aside.profile { position: static; padding: 0; border: 0; background: transparent; }
+  details.profile-toggle { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+  details.profile-toggle > summary { display: flex; justify-content: space-between; cursor: pointer; padding: 12px 14px; font-weight: 600; list-style: none; }
+  details.profile-toggle > summary::-webkit-details-marker { display: none; }
+  details.profile-toggle > summary::after { content: "Edit"; color: var(--accent); font-size: .85rem; }
+  details.profile-toggle[open] > summary::after { content: "Close"; }
+  .profile-fields { padding: 0 14px 14px; }
+  .grid2, .grid3 { grid-template-columns: 1fr; }
+  .macro-row { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 560px) {
+  .strip { grid-template-columns: 1fr 1fr; }
+  .strip .kpi:last-child { grid-column: 1 / -1; }
+  .week { grid-template-columns: 1fr; }
+  .ref { grid-template-columns: 1fr; gap: 4px; }
+  .top .btn-primary { width: 100%; }
+}
+@media (min-width: 861px) { details.profile-toggle > .profile-fields { display: grid; gap: 12px; } }
+.profile-fields { display: grid; gap: 12px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <div class="plate" aria-hidden="true"></div>
+      <div><h1>FitFlow</h1><small>Training, nutrition and health from current evidence</small></div>
+    </div>
+    <span class="tiny" id="planStamp"></span>
+    <button class="btn btn-primary" id="newPlan" type="button"><span class="spin" aria-hidden="true">↻</span> New plan</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="strip" aria-label="This week at a glance">
+    <div class="kpi k-train">
+      <span class="eyebrow"><i class="dot"></i>Sessions this week</span>
+      <span class="val" id="kSessions">0<small>/0</small></span>
+      <div class="bar"><i id="kSessionsBar" style="width:0"></i></div>
+    </div>
+    <div class="kpi k-rec">
+      <span class="eyebrow"><i class="dot"></i>Planned cardio</span>
+      <span class="val" id="kCardio">0<small> min</small></span>
+      <span class="sub" id="kCardioSub">WHO target 150–300 min</span>
+    </div>
+    <div class="kpi k-fuel">
+      <span class="eyebrow"><i class="dot"></i>Daily energy</span>
+      <span class="val" id="kKcal">0<small> kcal</small></span>
+      <span class="sub" id="kKcalSub"></span>
+    </div>
+    <div class="kpi k-fuel">
+      <span class="eyebrow"><i class="dot"></i>Protein</span>
+      <span class="val" id="kProtein">0<small> g</small></span>
+      <span class="sub" id="kProteinSub"></span>
+    </div>
+    <div class="kpi k-rec">
+      <span class="eyebrow"><i class="dot"></i>Today's habits</span>
+      <span class="val" id="kHabits">0<small>/8</small></span>
+      <div class="bar"><i id="kHabitsBar" style="width:0"></i></div>
+    </div>
+  </section>
+
+  <div class="layout">
+    <aside class="profile" aria-label="Your profile">
+      <details class="profile-toggle" id="profileDetails" open>
+        <summary>Your profile &amp; goal</summary>
+        <div class="profile-fields">
+          <div><span class="eyebrow">Your profile</span></div>
+          <p class="note" id="exampleNote">Example profile loaded. Change it to yours and everything updates.</p>
+          <div class="field"><label for="goal">Main goal</label>
+            <select id="goal">
+              <option value="muscle">Build muscle</option>
+              <option value="fatloss">Lose fat, keep muscle</option>
+              <option value="strength">Get stronger</option>
+              <option value="endurance">Endurance &amp; heart fitness</option>
+              <option value="health">General health &amp; longevity</option>
+            </select></div>
+          <div class="field"><label for="level">Training experience</label>
+            <select id="level">
+              <option value="beginner">Beginner (under 1 year)</option>
+              <option value="intermediate">Intermediate (1–3 years)</option>
+              <option value="advanced">Advanced (3+ years)</option>
+            </select></div>
+          <div class="row2">
+            <div class="field"><label for="days">Strength days</label>
+              <select id="days"><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></div>
+            <div class="field"><label for="minutes">Session length</label>
+              <select id="minutes"><option value="30">30 min</option><option value="45">45 min</option><option value="60">60 min</option><option value="75">75 min</option></select></div>
+          </div>
+          <div class="field"><label for="equip">Equipment</label>
+            <select id="equip">
+              <option value="gym">Full gym</option>
+              <option value="db">Dumbbells + bench at home</option>
+              <option value="bw">Bodyweight + resistance bands</option>
+            </select></div>
+          <div class="row2">
+            <div class="field"><label for="sex">Sex</label>
+              <select id="sex"><option value="m">Male</option><option value="f">Female</option></select></div>
+            <div class="field"><label for="age">Age</label><input id="age" type="number" min="16" max="95" inputmode="numeric"></div>
+          </div>
+          <div class="row2">
+            <div class="field"><label for="weight">Weight (kg)</label><input id="weight" type="number" min="35" max="250" step="0.5" inputmode="decimal"></div>
+            <div class="field"><label for="height">Height (cm)</label><input id="height" type="number" min="130" max="220" inputmode="numeric"></div>
+          </div>
+          <div class="field"><label for="waist">Waist (cm, optional)</label><input id="waist" type="number" min="50" max="200" inputmode="numeric" placeholder="Measured at the navel"></div>
+          <div class="field"><label for="activity">Activity outside workouts</label>
+            <select id="activity">
+              <option value="1.2">Mostly sitting</option>
+              <option value="1.3">Some walking</option>
+              <option value="1.45">On my feet most of the day</option>
+            </select></div>
+        </div>
+      </details>
+    </aside>
+
+    <div style="min-width:0">
+      <nav class="tabs" aria-label="Sections">
+        <a href="#training" data-view="training" style="--tc: var(--train)">Training</a>
+        <a href="#nutrition" data-view="nutrition" style="--tc: var(--fuel)">Nutrition</a>
+        <a href="#health" data-view="health" style="--tc: var(--recover)">Health</a>
+        <a href="#research" data-view="research">Research</a>
+      </nav>
+
+      <!-- TRAINING -->
+      <section class="view" id="view-training">
+        <div class="section-head">
+          <div><span class="eyebrow">This week</span><h2 id="planTitle">Your training week</h2></div>
+          <p id="planSummary"></p>
+        </div>
+        <div class="plan-meta">
+          <div class="panel">
+            <span class="eyebrow">How to progress this plan</span>
+            <p style="margin-top:6px;font-size:.9rem">Use <b>double progression</b>. Stay inside the rep range at the listed RIR (reps left in reserve). When you hit the top of the range on every set, add 2.5–5% load next session. Keep the same plan for a 4-week block, then press <b>New plan</b> for fresh exercises.</p>
+            <div class="phase" id="phase"></div>
+          </div>
+          <div class="panel">
+            <span class="eyebrow">Weekly sets per muscle</span>
+            <p class="tiny" style="margin:2px 0 8px" id="volNote"></p>
+            <div class="vol" id="vol"></div>
+          </div>
+        </div>
+        <div class="week" id="week"></div>
+      </section>
+
+      <!-- NUTRITION -->
+      <section class="view" id="view-nutrition" hidden>
+        <div class="section-head">
+          <div><span class="eyebrow">Daily targets</span><h2>Fuel for your goal</h2></div>
+          <p id="fuelSummary"></p>
+        </div>
+        <div class="stack">
+          <div class="panel">
+            <div class="macro-row">
+              <div class="macro"><span class="eyebrow">Calories</span><div class="val" id="nKcal"></div><span class="tiny" id="nKcalSub"></span></div>
+              <div class="macro"><span class="eyebrow">Protein</span><div class="val" id="nP"></div><span class="tiny" id="nPSub"></span></div>
+              <div class="macro"><span class="eyebrow">Carbohydrate</span><div class="val" id="nC"></div><span class="tiny" id="nCSub"></span></div>
+              <div class="macro"><span class="eyebrow">Fat</span><div class="val" id="nF"></div><span class="tiny" id="nFSub"></span></div>
+            </div>
+            <div class="macro-bar" id="macroBar" aria-hidden="true"></div>
+            <div class="legend" id="macroLegend"></div>
+          </div>
+          <div class="grid2">
+            <div class="panel">
+              <div class="section-head" style="margin-bottom:6px"><h3>Sample day of eating</h3><button class="btn" id="newMeals" type="button">Shuffle meals</button></div>
+              <p class="tiny" id="mealNote" style="margin-bottom:6px"></p>
+              <ul class="meals" id="meals"></ul>
+            </div>
+            <div class="panel">
+              <h3 style="margin-bottom:10px">Daily essentials</h3>
+              <div class="grid2" style="gap:10px">
+                <div class="macro"><span class="eyebrow">Fibre</span><div class="val" id="nFiber"></div><span class="tiny">14 g per 1,000 kcal</span></div>
+                <div class="macro"><span class="eyebrow">Fluids</span><div class="val" id="nWater"></div><span class="tiny">+0.5–1 L per hour of training</span></div>
+                <div class="macro"><span class="eyebrow">Protein per meal</span><div class="val" id="nPerMeal"></div><span class="tiny">0.4 g/kg, across 4 meals</span></div>
+                <div class="macro"><span class="eyebrow">Fruit &amp; veg</span><div class="val">5+<small> portions</small></div><span class="tiny">Aim for variety and colour</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="grid2">
+            <div class="panel">
+              <h3 style="margin-bottom:10px">What to eat more of, and less of</h3>
+              <ul class="tips" id="foodTips"></ul>
+            </div>
+            <div class="panel">
+              <h3 style="margin-bottom:10px">Supplements with strong evidence</h3>
+              <ul class="tips">
+                <li><b>Creatine monohydrate, 3–5 g/day.</b> Most-studied supplement for strength and lean mass. Take it any time of day; no loading phase needed.</li>
+                <li><b>Protein powder</b> only as a convenience to reach your protein target. Food first.</li>
+                <li><b>Caffeine, 3–6 mg/kg</b> about 60 min before hard sessions can improve performance. Avoid it within ~8 hours of bed.</li>
+                <li><b>Vitamin D</b> if blood levels are low or you get little sun (common in winter at northern latitudes).</li>
+                <li><b>Omega-3 (EPA/DHA)</b> if you eat oily fish less than twice a week.</li>
+              </ul>
+              <p class="tiny" style="margin-top:10px">Check with your doctor before starting supplements if you take medication or have a medical condition.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- HEALTH -->
+      <section class="view" id="view-health" hidden>
+        <div class="section-head">
+          <div><span class="eyebrow">Recovery &amp; long-term health</span><h2>Health habits</h2></div>
+          <p>Sleep, daily movement and cardio fitness have some of the strongest links to long-term health. Tick off today's habits; the last 7 days are kept in this browser.</p>
+        </div>
+        <div class="grid2">
+          <div class="panel">
+            <div class="section-head" style="margin-bottom:8px"><h3>Today</h3><span class="tiny" id="todayLabel"></span></div>
+            <div class="habits" id="habits"></div>
+            <div class="heat" id="heat"></div>
+          </div>
+          <div class="stack">
+            <div class="panel">
+              <h3 style="margin-bottom:10px">Your daily targets</h3>
+              <div class="grid2" style="gap:10px">
+                <div><span class="eyebrow">Sleep</span><div class="target"><span class="val" id="hSleep"></span><span class="muted">hours</span></div><p class="tiny">Same wake time every day, ±30 min.</p></div>
+                <div><span class="eyebrow">Steps</span><div class="target"><span class="val" id="hSteps"></span><span class="muted">per day</span></div><p class="tiny" id="hStepsNote"></p></div>
+                <div><span class="eyebrow">Movement breaks</span><div class="target"><span class="val">3–4</span><span class="muted">× 1 min</span></div><p class="tiny">Brisk bursts: stairs, fast walking, carrying shopping.</p></div>
+                <div><span class="eyebrow">Waist-to-height</span><div class="target"><span class="val" id="hWhtr">–</span></div><p class="tiny" id="hWhtrNote">Add your waist to check. Keep it under 0.5.</p></div>
+              </div>
+            </div>
+            <div class="panel">
+              <h3 style="margin-bottom:4px">Your heart-rate zones</h3>
+              <p class="tiny" style="margin-bottom:8px" id="hrNote"></p>
+              <div class="tablewrap"><table class="zones" id="zones"></table></div>
+            </div>
+          </div>
+        </div>
+        <div class="grid3" style="margin-top:14px">
+          <div class="panel"><span class="chip rec">Sleep</span><ul class="tips" style="margin-top:10px">
+            <li>Adults need 7–9 hours; short sleep blunts muscle recovery and raises hunger hormones.</li>
+            <li>Dark, cool room (around 18 °C), screens away 30–60 min before bed.</li>
+            <li>Get 10+ minutes of outdoor light soon after waking to anchor your body clock.</li>
+          </ul></div>
+          <div class="panel"><span class="chip rec">Stress &amp; recovery</span><ul class="tips" style="margin-top:10px">
+            <li>If resting heart rate is 5+ bpm above normal, or sleep and mood dip for days, take an easy day.</li>
+            <li>5–10 min of slow breathing (around 6 breaths/min) lowers stress and blood pressure.</li>
+            <li>Alcohol worsens sleep quality and muscle repair. Less is better; no amount is risk-free.</li>
+          </ul></div>
+          <div class="panel"><span class="chip rec">Know your numbers</span><ul class="tips" style="margin-top:10px">
+            <li>Blood pressure: aim for under 120/80 mmHg. Check it at least yearly.</li>
+            <li>Ask your doctor about cholesterol, blood glucose (HbA1c) and age-appropriate screening.</li>
+            <li>Stop and get checked if exercise brings chest pain, fainting, or unusual breathlessness.</li>
+          </ul></div>
+        </div>
+      </section>
+
+      <!-- RESEARCH -->
+      <section class="view" id="view-research" hidden>
+        <div class="section-head">
+          <div><span class="eyebrow">Evidence base</span><h2>The research behind your plan</h2></div>
+          <p>Every recommendation comes from guidelines, position stands or meta-analyses. Plans are rebuilt from these rules each time you press New plan.</p>
+        </div>
+        <div class="panel"><div class="refs" id="refs"></div></div>
+        <p class="disclaimer">FitFlow gives general education based on published research, not medical advice. If you have a heart, lung, metabolic or joint condition, are pregnant, or are new to exercise and over 45, check with a health professional before starting. Calorie estimates are starting points: track your weight trend for 2–3 weeks and adjust by 100–200 kcal.</p>
+      </section>
+    </div>
+  </div>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  const $ = (s) => document.querySelector(s);
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  };
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  function rng(seed) { let a = seed >>> 0; return function () { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+  const pick = (r, arr) => arr[Math.floor(r() * arr.length)];
+  function shuffle(r, arr) { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+  /* ---------- Exercise library: [name, pattern, equipment (g=gym, d=dumbbells, b=bodyweight/bands), cue, muscle override] ---------- */
+  const LIB = [
+    ["Back squat", "squat", "g", "Brace, sit between your hips, knees track over toes"],
+    ["Front squat", "squat", "g", "Elbows high, torso upright"],
+    ["Hack squat", "squat", "g", "Full depth, control the lowering"],
+    ["Leg press", "squat", "g", "Lower until your hips start to tuck, push through mid-foot"],
+    ["Goblet squat", "squat", "gd", "Weight at your chest, sit tall between your heels"],
+    ["Heels-elevated goblet squat", "squat", "gd", "Heels on a plate so the knees travel forward"],
+    ["Tempo bodyweight squat", "squat", "b", "3-second lowering, 1-second pause at the bottom"],
+    ["Banded squat", "squat", "b", "Stand on the band, handles at your shoulders"],
+    ["Cossack squat", "squat", "bd", "Shift side to side; keep the straight leg's toes up"],
+    ["Romanian deadlift", "hinge", "g", "Push hips back, bar close to thighs, stop at a hamstring stretch"],
+    ["Trap-bar deadlift", "hinge", "g", "Push the floor away, finish tall"],
+    ["Barbell hip thrust", "hinge", "g", "Chin tucked, squeeze glutes hard at the top", { glutes: 1, hams: 0.5 }],
+    ["Dumbbell Romanian deadlift", "hinge", "gd", "Soft knees, hinge until the hamstrings stretch"],
+    ["Single-leg dumbbell RDL", "hinge", "gd", "Hips square, reach the free leg back"],
+    ["Dumbbell hip thrust", "hinge", "gd", "Shoulders on the bench, pause at the top", { glutes: 1, hams: 0.5 }],
+    ["Single-leg glute bridge", "hinge", "b", "Drive through the heel, pause 2 s at the top", { glutes: 1, hams: 0.5 }],
+    ["Banded good morning", "hinge", "b", "Band under feet and behind neck, hinge from the hips"],
+    ["Assisted Nordic curl", "legcurl", "gb", "Lower as slowly as you can, push back up with your hands"],
+    ["Seated leg curl", "legcurl", "g", "Lean forward slightly for a deeper hamstring stretch"],
+    ["Lying leg curl", "legcurl", "g", "Hips down, slow 3-second lowering"],
+    ["Slider hamstring curl", "legcurl", "bd", "Hips high, slide heels out slowly"],
+    ["Bulgarian split squat", "lunge", "gdb", "Rear foot on a bench, front knee travels forward"],
+    ["Walking lunge", "lunge", "gdb", "Long stride, torso tall"],
+    ["Reverse lunge", "lunge", "gdb", "Step back softly, drive through the front foot"],
+    ["Step-up", "lunge", "gdb", "Knee-height box; no push from the back leg"],
+    ["Leg extension", "quad", "g", "Pause 1 s at the top, slow lowering"],
+    ["Spanish squat", "quad", "b", "Band behind knees anchored in front, sit back and down"],
+    ["Barbell bench press", "hpush", "g", "Shoulder blades pinned, bar to lower chest"],
+    ["Incline dumbbell press", "hpush", "gd", "30° bench, elbows about 45° from the body"],
+    ["Dumbbell bench press", "hpush", "gd", "Deep stretch at the bottom, press up and slightly in"],
+    ["Machine chest press", "hpush", "g", "Handles at mid-chest, controlled 2-second lowering"],
+    ["Push-up", "hpush", "bd", "Rigid plank, chest to fist height"],
+    ["Feet-elevated push-up", "hpush", "b", "Feet on a step; add a band across the back to progress"],
+    ["Parallel-bar dip", "hpush", "gb", "Slight forward lean, go to a comfortable depth"],
+    ["Chest-supported row", "hpull", "gd", "Pull elbows toward your hips, pause"],
+    ["Seated cable row", "hpull", "g", "Tall chest, let the shoulders reach forward at the stretch"],
+    ["One-arm dumbbell row", "hpull", "gd", "Hand on bench, row toward the hip"],
+    ["Barbell row", "hpull", "g", "Hinge to ~45°, bar to lower ribs"],
+    ["Inverted row", "hpull", "gb", "Body straight, pull chest to the bar or table edge"],
+    ["Band row", "hpull", "b", "Anchor at chest height, squeeze shoulder blades"],
+    ["Standing overhead press", "vpush", "g", "Squeeze glutes, press up and slightly back"],
+    ["Seated dumbbell shoulder press", "vpush", "gd", "Elbows slightly in front of the body"],
+    ["Landmine press", "vpush", "g", "Half-kneeling, press up and forward"],
+    ["Half-kneeling one-arm dumbbell press", "vpush", "gd", "Ribs down, glute of the down knee squeezed"],
+    ["Pike push-up", "vpush", "b", "Hips high, head travels in front of the hands"],
+    ["Band overhead press", "vpush", "b", "Stand on the band, press to lockout"],
+    ["Pull-up (assisted if needed)", "vpull", "gb", "Full hang to chin over bar"],
+    ["Lat pulldown", "vpull", "g", "Pull elbows down to your sides, slight lean back"],
+    ["Neutral-grip pulldown", "vpull", "g", "Palms facing, bar to upper chest"],
+    ["Chin-up (assisted if needed)", "vpull", "gb", "Palms toward you, chest to bar"],
+    ["Band lat pulldown", "vpull", "bd", "Anchor high, pull elbows to your ribs"],
+    ["Dumbbell pullover", "vpull", "gd", "Long arms, feel the lats stretch overhead", { back: 1, chest: 0.5 }],
+    ["Dead bug", "core", "gdb", "Lower back pressed down, move slowly"],
+    ["Pallof press", "core", "gb", "Resist the rotation, press straight out"],
+    ["Side plank", "core", "gdb", "Straight line from head to heels"],
+    ["Hanging knee raise", "core", "g", "Curl the pelvis up, no swinging"],
+    ["Ab wheel rollout", "core", "gb", "Ribs down, roll only as far as you can control"],
+    ["Bird dog", "core", "gdb", "Reach long, hips level"],
+    ["Copenhagen side plank", "core", "gdb", "Top leg on a bench; short holds to start"],
+    ["Reverse crunch", "core", "gdb", "Roll the hips off the floor, slow down"],
+    ["Farmer carry", "carry", "gd", "Heavy dumbbells, tall posture, 30–40 m"],
+    ["Suitcase carry", "carry", "gd", "One side only, do not lean"],
+    ["Dumbbell lateral raise", "lateral", "gd", "Lead with the elbows, stop at shoulder height"],
+    ["Cable lateral raise", "lateral", "g", "Cable behind the body, constant tension"],
+    ["Band lateral raise", "lateral", "b", "Slow 3-second lowering"],
+    ["Face pull", "rear", "g", "Rope to forehead, thumbs back"],
+    ["Reverse dumbbell fly", "rear", "gd", "Chest on an incline bench, sweep the arms wide"],
+    ["Band pull-apart", "rear", "b", "Straight arms, pull the band to your chest"],
+    ["Dumbbell curl", "biceps", "gd", "Elbows still, full stretch at the bottom"],
+    ["Incline dumbbell curl", "biceps", "gd", "Arms hang behind the body for a long stretch"],
+    ["Cable curl", "biceps", "g", "Step back so tension stays at the bottom"],
+    ["Band curl", "biceps", "b", "Squeeze at the top, slow lowering"],
+    ["Cable pushdown", "triceps", "g", "Elbows pinned, full lockout"],
+    ["Overhead dumbbell triceps extension", "triceps", "gd", "Deep stretch behind the head"],
+    ["Band pushdown", "triceps", "b", "Anchor high, elbows at your sides"],
+    ["Close-grip push-up", "triceps", "b", "Hands under shoulders, elbows brush the ribs"],
+    ["Standing calf raise", "calves", "gdb", "Full stretch at the bottom, pause 1 s"],
+    ["Seated calf raise", "calves", "g", "Pause in the stretch for 2 s"]
+  ].map(([name, pattern, equip, cue, m]) => ({ name, pattern, equip, cue, m }));
+
+  const MUSCLES = { squat: { quads: 1, glutes: 0.5 }, hinge: { hams: 1, glutes: 1 }, legcurl: { hams: 1 }, lunge: { quads: 1, glutes: 1 }, quad: { quads: 1 },
+    hpush: { chest: 1, triceps: 0.5, shoulders: 0.5 }, vpush: { shoulders: 1, triceps: 0.5 }, hpull: { back: 1, biceps: 0.5 }, vpull: { back: 1, biceps: 0.5 },
+    core: { core: 1 }, carry: { core: 0.5 }, lateral: { shoulders: 1 }, rear: { shoulders: 0.5, back: 0.5 }, biceps: { biceps: 1 }, triceps: { triceps: 1 }, calves: { calves: 1 } };
+  const MUSCLE_LABELS = [["chest", "Chest"], ["back", "Back"], ["shoulders", "Shoulders"], ["quads", "Quads"], ["hams", "Hamstrings"], ["glutes", "Glutes"], ["biceps", "Biceps"], ["triceps", "Triceps"], ["calves", "Calves"], ["core", "Core"]];
+  const FALLBACK = { carry: "core", quad: "lunge", legcurl: "hinge", rear: "hpull", calves: "core", lateral: "vpush" };
+
+  const T = {
+    FA: { t: "Full body A", p: ["squat", "hpush", "hpull", "hinge", "core", "lateral", "calves"] },
+    FB: { t: "Full body B", p: ["hinge", "vpull", "vpush", "lunge", "core", "biceps", "triceps"] },
+    FC: { t: "Full body C", p: ["lunge", "hpull", "hpush", "legcurl", "carry", "rear", "calves"] },
+    UA: { t: "Upper A", p: ["hpush", "hpull", "vpush", "vpull", "lateral", "triceps", "biceps"] },
+    UB: { t: "Upper B", p: ["vpull", "hpush", "hpull", "hpush", "vpush", "rear", "biceps"] },
+    LA: { t: "Lower A", p: ["squat", "hinge", "lunge", "legcurl", "calves", "core", "quad"] },
+    LB: { t: "Lower B", p: ["hinge", "lunge", "quad", "legcurl", "core", "calves", "squat"] },
+    PU: { t: "Push", p: ["hpush", "vpush", "hpush", "lateral", "triceps", "core", "triceps"] },
+    PL: { t: "Pull", p: ["vpull", "hpull", "hpull", "rear", "biceps", "core", "biceps"] },
+    LG: { t: "Legs", p: ["squat", "hinge", "lunge", "legcurl", "calves", "core", "quad"] }
+  };
+  const SPLITS = { 2: ["FA", "FB"], 3: ["FA", "FB", "FC"], 4: ["UA", "LA", "UB", "LB"], 5: ["UA", "LA", "UB", "LB", "FC"], 6: ["PU", "PL", "LG", "PU", "PL", "LG"] };
+  const SPLIT_NAMES = { 2: "Full-body split", 3: "Full-body split", 4: "Upper / lower split", 5: "Upper / lower + full body", 6: "Push / pull / legs" };
+  const SPREAD = { 2: [0, 3], 3: [0, 2, 4], 4: [0, 1, 3, 4], 5: [0, 1, 2, 4, 5], 6: [0, 1, 2, 3, 4, 5] };
+  const DOW = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const COUNT = { 30: 4, 45: 5, 60: 6, 75: 7 };
+
+  const SCHEME = {
+    strength: { main: [4, "3–6", "1–3", "2–3 min"], acc: [3, "6–10", "1–2", "90 s"], note: "Main lifts at roughly 80–87% of your 1-rep max." },
+    muscle: { main: [3, "6–10", "0–2", "2 min"], acc: [3, "10–15", "0–1", "60–90 s"], note: "Take sets close to failure; lengthened, controlled reps." },
+    fatloss: { main: [3, "6–10", "1–3", "2 min"], acc: [2, "10–15", "1–2", "60 s"], note: "Keep lifting heavy-ish in a deficit to hold on to muscle." },
+    endurance: { main: [3, "8–12", "2–3", "90 s"], acc: [2, "12–20", "1–3", "45–60 s"], note: "Strength work supports running economy and injury resilience." },
+    health: { main: [3, "6–10", "2–3", "2 min"], acc: [2, "10–15", "1–3", "60–90 s"], note: "Lift with a fast, controlled lifting phase to train power." }
+  };
+  const VOL_TARGET = { muscle: [10, 20], strength: [6, 12], fatloss: [8, 16], endurance: [4, 10], health: [4, 10] };
+
+  const WARMUPS = ["World's greatest stretch", "Cat–cow", "Hip 90/90 switches", "Band pull-aparts", "Leg swings", "Glute bridges", "Scapular push-ups", "Deep squat hold", "Thoracic rotations", "Ankle rocks", "Inchworms", "Arm circles"];
+  const Z2_MODES = ["Brisk incline walk", "Cycling", "Rowing", "Elliptical", "Easy jog", "Swimming"];
+
+  /* ---------- Profile ---------- */
+  const DEFAULT = { goal: "muscle", level: "intermediate", days: "4", minutes: "60", equip: "gym", sex: "m", age: 35, weight: 80, height: 178, waist: "", activity: "1.3" };
+  const FIELDS = Object.keys(DEFAULT);
+  let profile = Object.assign({}, DEFAULT, store.get("ff-profile", {}));
+  let isExample = !store.get("ff-profile", null);
+  let state = Object.assign({ seed: (Date.now() % 1e9) | 0, mealSeed: 7, created: new Date().toISOString(), swaps: {} }, store.get("ff-state", {}));
+
+  function readProfile() {
+    FIELDS.forEach((k) => { const el = document.getElementById(k); profile[k] = el.type === "number" ? (el.value === "" ? "" : Number(el.value)) : el.value; });
+  }
+  function writeProfile() { FIELDS.forEach((k) => { document.getElementById(k).value = profile[k]; }); }
+  const P = () => ({
+    age: Number(profile.age) || 35, w: Number(profile.weight) || 75, h: Number(profile.height) || 175, days: Number(profile.days) || 3,
+    min: Number(profile.minutes) || 60, waist: Number(profile.waist) || 0
+  });
+
+  /* ---------- Plan generation ---------- */
+  function scheme(goal, level, isMain, pattern) {
+    const s = SCHEME[goal]; let [sets, reps, rir, rest] = isMain ? s.main : s.acc;
+    if (level === "beginner") { sets = Math.max(2, sets - 1); rir = "2–3"; }
+    if (level === "advanced" && isMain) sets += 1;
+    if (pattern === "core") { reps = "8–12 / 30–45 s"; }
+    if (pattern === "carry") { reps = "30–40 m"; rir = "–"; }
+    return { sets, reps, rir, rest };
+  }
+
+  function candidates(pattern, equip, used) {
+    const e = { gym: "g", db: "d", bw: "b" }[equip];
+    return LIB.filter((x) => x.pattern === pattern && x.equip.includes(e) && !used.has(x.name));
+  }
+
+  function buildPlan() {
+    const r = rng(state.seed); const p = P(); const goal = profile.goal; const level = profile.level;
+    const split = SPLITS[p.days]; const spread = SPREAD[p.days]; const n = COUNT[p.min] || 6;
+    const weekUsed = new Set();
+    const days = DOW.map((d, i) => ({ dow: i, lift: null, cardio: [], warm: [] }));
+    split.forEach((key, si) => {
+      const tpl = T[key]; const used = new Set(); const ex = [];
+      const title = p.days === 6 ? tpl.t + (si > 2 ? " B" : " A") : (p.days === 5 && key === "FC" ? "Full body + carries" : tpl.t);
+      for (const pat0 of tpl.p) {
+        if (ex.length >= n) break;
+        let pat = pat0; let c = candidates(pat, profile.equip, used);
+        if (!c.length && FALLBACK[pat]) { pat = FALLBACK[pat]; c = candidates(pat, profile.equip, used); }
+        if (!c.length) continue;
+        const fresh = c.filter((x) => !weekUsed.has(x.name));
+        const choice = pick(r, fresh.length ? fresh : c);
+        used.add(choice.name); weekUsed.add(choice.name);
+        ex.push({ name: choice.name, pattern: choice.pattern, cue: choice.cue });
+      }
+      const day = days[spread[si]];
+      day.lift = { title, ex };
+      day.warm = shuffle(r, WARMUPS).slice(0, 3);
+    });
+    // apply user swaps
+    Object.entries(state.swaps || {}).forEach(([k, name]) => {
+      const [di, ei] = k.split("-").map(Number); const it = LIB.find((x) => x.name === name);
+      if (it && days[di] && days[di].lift && days[di].lift.ex[ei]) days[di].lift.ex[ei] = { name: it.name, pattern: it.pattern, cue: it.cue };
+    });
+    days.forEach((d) => { if (d.lift) d.lift.ex.forEach((e, i) => { e.s = scheme(goal, level, i < 2 && !["core", "carry", "lateral", "rear", "biceps", "triceps", "calves"].includes(e.pattern), e.pattern); }); });
+
+    // Cardio prescription
+    const hrMax = Math.round(208 - 0.7 * p.age);
+    const z2 = [Math.round(hrMax * 0.6), Math.round(hrMax * 0.7)]; const hi = [Math.round(hrMax * 0.85), Math.round(hrMax * 0.95)];
+    const CARDIO = { muscle: [2, 30, 1], strength: [2, 30, 1], fatloss: [3, 40, 1], endurance: [3, 45, 1], health: [3, 40, 1] };
+    let [zN, zMin, iN] = CARDIO[goal];
+    if (goal === "endurance") zN = 3;
+    const intervals = [
+      { name: "Norwegian 4×4 intervals", min: 38, detail: `10 min warm-up, then 4 × 4 min at ${hi[0]}–${hi[1]} bpm with 3 min easy between. 5 min cool-down.` },
+      { name: "10 × 1-minute intervals", min: 30, detail: `5 min warm-up, then 10 × (1 min hard at ~${Math.round(hrMax * 0.9)} bpm, 1 min easy). 5 min cool-down.` },
+      { name: "Sprint intervals", min: 25, detail: "5 min warm-up, then 4–6 × 30 s all-out on a bike or hill, 4 min easy between. Cool down." }
+    ];
+    const sessions = [];
+    for (let i = 0; i < zN; i++) sessions.push({ kind: "z2", name: "Zone 2 · " + pick(r, Z2_MODES), min: zMin, detail: `${zMin} min at ${z2[0]}–${z2[1]} bpm. You can talk in full sentences.` });
+    if (goal === "endurance") sessions.push({ kind: "z2", name: "Long easy session · " + pick(r, ["Run", "Ride", "Hike", "Row"]), min: 60, detail: `60+ min at ${z2[0]}–${z2[1]} bpm. Build by ~10% per week.` });
+    for (let i = 0; i < iN; i++) { const it = pick(r, level === "beginner" ? intervals.slice(0, 2) : intervals); sessions.push(Object.assign({ kind: "int" }, it)); }
+    // Assign: intervals first to a free day not before a lower-body day, then zone 2 to free days, Sunday kept free while possible.
+    const free = days.filter((d) => !d.lift && d.dow !== 6).map((d) => d.dow);
+    const order = sessions.sort((a, b) => (a.kind === "int" ? -1 : 1) - (b.kind === "int" ? -1 : 1));
+    const freeQ = shuffle(r, free);
+    order.forEach((s, i) => {
+      let target = freeQ.shift();
+      if (target === undefined) {
+        const liftDays = days.filter((d) => d.lift && d.cardio.length === 0);
+        target = liftDays.length ? liftDays[i % liftDays.length].dow : 6;
+        s = Object.assign({}, s, { after: true });
+      }
+      days[target].cardio.push(s);
+    });
+    if (p.age >= 65) [0, 2, 4].forEach((i) => { days[i].balance = true; });
+    const cardioMin = sessions.reduce((a, s) => a + s.min, 0);
+    return { days, hrMax, z2, hi, cardioMin, goal, n };
+  }
+
+  function weeklyVolume(plan) {
+    const v = {}; MUSCLE_LABELS.forEach(([k]) => (v[k] = 0));
+    plan.days.forEach((d) => d.lift && d.lift.ex.forEach((e) => {
+      const lib = LIB.find((x) => x.name === e.name); const m = (lib && lib.m) || MUSCLES[e.pattern] || {};
+      Object.entries(m).forEach(([k, f]) => { v[k] += f * e.s.sets; });
+    }));
+    return v;
+  }
+
+  /* ---------- Nutrition ---------- */
+  function nutrition(plan) {
+    const p = P(); const goal = profile.goal; const male = profile.sex === "m";
+    const bmr = 10 * p.w + 6.25 * p.h - 5 * p.age + (male ? 5 : -161);
+    const cardioSessions = plan.days.reduce((a, d) => a + d.cardio.length, 0);
+    const factor = Math.min(2, Number(profile.activity) + 0.035 * p.days + 0.025 * cardioSessions);
+    const tdee = bmr * factor;
+    const adj = { fatloss: 0.8, muscle: profile.level === "beginner" ? 1.1 : 1.05, strength: 1.05, endurance: 1, health: 1 }[goal];
+    let kcal = Math.max(male ? 1500 : 1200, Math.round((tdee * adj) / 10) * 10);
+    const bmi = p.w / Math.pow(p.h / 100, 2);
+    const refW = bmi >= 30 ? 25 * Math.pow(p.h / 100, 2) : p.w;
+    const gkg = { fatloss: 2.0, muscle: 1.8, strength: 1.8, endurance: 1.5, health: p.age >= 50 ? 1.4 : 1.3 }[goal];
+    const protein = Math.round(refW * gkg / 5) * 5;
+    const fat = Math.round((kcal * 0.28) / 9);
+    const carbs = Math.max(0, Math.round((kcal - protein * 4 - fat * 9) / 4));
+    return { bmr: Math.round(bmr), tdee: Math.round(tdee), kcal, protein, fat, carbs, gkg, refW, bmi, adj,
+      fiber: Math.round(14 * kcal / 1000), water: (0.035 * p.w).toFixed(1), perMeal: Math.round(0.4 * refW) };
+  }
+
+  const MEALS = {
+    Breakfast: [["Greek yogurt (250 g) with berries, oats and walnuts", 30, 450], ["Three-egg vegetable omelette with wholegrain toast", 26, 450], ["Overnight oats with whey, chia and banana", 35, 500], ["Cottage cheese on rye toast with tomato", 30, 400], ["Tofu scramble with spinach and black beans on toast", 28, 450], ["Smoked salmon, eggs and avocado on sourdough", 32, 520]],
+    Lunch: [["Chicken, quinoa and roast-vegetable bowl with olive oil", 42, 600], ["Lentil and feta salad with greens and seeds", 28, 550], ["Tuna and white-bean salad with a wholegrain wrap", 38, 550], ["Turkey and hummus wholegrain sandwich, side salad", 35, 550], ["Chickpea and spinach curry with brown rice", 22, 600], ["Salmon with new potatoes and green beans", 35, 600]],
+    Snack: [["Protein shake and a piece of fruit", 25, 250], ["Skyr with honey and almonds", 20, 250], ["Hummus, carrots and a boiled egg", 12, 250], ["Edamame (150 g)", 17, 180], ["Cottage cheese with pineapple", 20, 200], ["Milk or soy latte and a handful of nuts", 12, 300]],
+    Dinner: [["Salmon, brown rice and broccoli", 38, 650], ["Lean beef chilli with kidney beans", 40, 650], ["Chicken and vegetable stir-fry with noodles", 40, 650], ["Tofu and edamame stir-fry with rice", 30, 600], ["Baked cod with sweet potato and peas", 35, 550], ["Turkey meatballs, wholewheat pasta and side salad", 40, 700], ["Bean and vegetable enchiladas with yogurt topping", 28, 650]]
+  };
+
+  /* ---------- Research ---------- */
+  const REFS = [
+    ["train", "Training", "Train every major muscle group at least twice a week. ~10+ weekly sets per muscle for growth; heavier loads (~80% 1RM) for strength. Training to failure, machines vs free weights and complex periodisation make little difference for most adults; consistency matters most.", "American College of Sports Medicine Position Stand on resistance training, Med Sci Sports Exerc, 2026.", "https://acsm.org/resistance-training-guidelines-update-2026/"],
+    ["train", "Training", "Muscle growth keeps rising with weekly volume but with diminishing returns; strength gains level off at lower volumes and benefit more from frequency. Sets are counted fractionally (direct = 1, indirect = 0.5), which is how the volume chart works.", "Pelland et al., meta-regression of 67 studies on volume and frequency, Sports Medicine, 2025–26.", ""],
+    ["train", "Training", "Stopping 0–3 reps short of failure gives similar growth to training to failure, with less fatigue.", "Refalo et al., Sports Medicine, 2023 (proximity-to-failure meta-analysis).", ""],
+    ["rec", "Activity", "Adults: 150–300 min moderate or 75–150 min vigorous aerobic activity per week, plus muscle strengthening on 2+ days. Over 65s add balance training 3 days a week.", "World Health Organization Guidelines on Physical Activity and Sedentary Behaviour, 2020.", "https://www.who.int/publications/i/item/9789240015128"],
+    ["rec", "Activity", "4 × 4-minute intervals at 85–95% max heart rate raise VO₂max more than steady moderate training. Higher cardio fitness is one of the strongest predictors of a longer life.", "Helgerud et al., Med Sci Sports Exerc, 2007; Mandsager et al., JAMA Network Open, 2018.", "https://jamanetwork.com/journals/jamanetworkopen/fullarticle/2707428"],
+    ["rec", "Activity", "Mortality risk falls with more daily steps, levelling off around 6,000–8,000 steps for over 60s and 8,000–10,000 for younger adults.", "Paluch et al., Lancet Public Health, 2022.", "https://www.thelancet.com/journals/lanpub/article/PIIS2468-2667(21)00302-9/fulltext"],
+    ["rec", "Activity", "Three to four 1-minute bursts of vigorous everyday activity a day are associated with markedly lower mortality in people who do no formal exercise.", "Stamatakis et al., Nature Medicine, 2022 (observational).", "https://www.nature.com/articles/s41591-022-02100-x"],
+    ["fuel", "Nutrition", "Protein intakes up to ~1.6 g/kg/day maximise gains from resistance training, with benefit possible up to 2.2 g/kg. Higher intakes help preserve muscle in a calorie deficit.", "Morton et al., British Journal of Sports Medicine, 2018; ISSN Position Stand on protein, 2017.", "https://bjsm.bmj.com/content/52/6/376"],
+    ["fuel", "Nutrition", "Creatine monohydrate (3–5 g/day) is safe and effective for strength and lean mass.", "International Society of Sports Nutrition Position Stand on creatine, 2017.", "https://jissn.biomedcentral.com/articles/10.1186/s12970-017-0173-z"],
+    ["fuel", "Nutrition", "On an ultra-processed diet people ate ~500 kcal/day more and gained weight compared with an unprocessed diet matched for nutrients.", "Hall et al., Cell Metabolism, 2019 (controlled trial).", "https://www.cell.com/cell-metabolism/fulltext/S1550-4131(19)30248-7"],
+    ["fuel", "Nutrition", "Energy needs are estimated with the Mifflin–St Jeor equation, the most accurate common formula for resting energy expenditure.", "Mifflin et al., Am J Clin Nutr, 1990.", ""],
+    ["rec", "Recovery", "Adults should sleep 7 or more hours a night regularly; less is linked with poorer health and performance.", "American Academy of Sleep Medicine & Sleep Research Society consensus, 2015.", ""],
+    ["rec", "Health", "Keep waist circumference below half your height to reduce cardiometabolic risk.", "NICE guideline on overweight and obesity, 2022.", ""]
+  ];
+
+  /* ---------- Habits ---------- */
+  const HABITS = [["move", "Planned workout done (or rest day respected)"], ["steps", "Step target reached"], ["protein", "Protein target reached"], ["plants", "5+ portions of fruit and vegetables"], ["sleep", "7+ hours of sleep last night"], ["water", "Fluid target reached"], ["light", "10 min of outdoor morning light"], ["alcohol", "Alcohol-free day"]];
+  const dayKey = (d) => d.toISOString().slice(0, 10);
+  function isoWeek(d) { const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); const day = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - day); const y = new Date(Date.UTC(t.getUTCFullYear(), 0, 1)); return t.getUTCFullYear() + "-W" + Math.ceil(((t - y) / 864e5 + 1) / 7); }
+
+  /* ---------- Render ---------- */
+  let plan, nut;
+  const goalNames = { muscle: "Build muscle", fatloss: "Lose fat, keep muscle", strength: "Get stronger", endurance: "Endurance & heart fitness", health: "General health & longevity" };
+
+  function render() {
+    plan = buildPlan(); nut = nutrition(plan);
+    renderTraining(); renderNutrition(); renderHealth(); renderSummary();
+    const c = new Date(state.created);
+    $("#planStamp").textContent = "Plan created " + c.toLocaleDateString(undefined, { day: "numeric", month: "short" });
+    $("#exampleNote").hidden = !isExample;
+  }
+
+  function doneKey() { return "ff-done-" + state.seed + "-" + isoWeek(new Date()); }
+
+  function renderTraining() {
+    const p = P(); const s = SCHEME[profile.goal];
+    $("#planTitle").textContent = SPLIT_NAMES[p.days] + " · " + p.days + " strength days";
+    $("#planSummary").textContent = goalNames[profile.goal] + ". " + s.note + " Rest times are between sets.";
+    $("#phase").innerHTML = [["Week 1", "Find loads at the listed RIR"], ["Week 2", "Add reps"], ["Week 3", "Add reps or load"], ["Week 4", "Deload: half the sets, same loads"]]
+      .map(([w, t], i) => `<div class="${i === 3 ? "deload" : ""}"><b>${w}</b>${t}</div>`).join("");
+    const done = store.get(doneKey(), []);
+    const todayIdx = (new Date().getDay() + 6) % 7;
+    $("#week").innerHTML = plan.days.map((d) => {
+      const hasWork = d.lift || d.cardio.length;
+      const kind = d.lift ? '<span class="chip train">Strength</span>' : d.cardio.length ? '<span class="chip rec">Cardio</span>' : '<span class="chip">Rest</span>';
+      const title = d.lift ? esc(d.lift.title) : d.cardio.length ? "Cardio & mobility" : "Recovery day";
+      const sub = d.lift ? `${d.lift.ex.length} exercises · ~${p.min} min${d.cardio.length ? " + cardio" : ""}` : d.cardio.length ? `~${d.cardio.reduce((a, c) => a + c.min, 0)} min` : "Walk, stretch, sleep well";
+      const isDone = done.includes(d.dow);
+      let body = "";
+      if (d.lift) {
+        body += `<div class="warm"><span class="block-label">Warm-up · 5–8 min</span><br>5 min easy cardio, then ${d.warm.map(esc).join(", ")}. 2–3 lighter ramp-up sets on your first lift.</div>`;
+        body += `<div><span class="block-label">Strength</span><ol class="ex">` + d.lift.ex.map((e, i) => `
+          <li><span class="ex-n">${i + 1}</span>
+            <div><div class="ex-name">${esc(e.name)}</div>
+              <div class="ex-scheme"><b>${e.s.sets} × ${e.s.reps}</b> · RIR ${e.s.rir} · rest ${e.s.rest}</div>
+              <div class="ex-cue">${esc(e.cue)}</div></div>
+            <button class="swap" type="button" data-swap="${d.dow}-${i}" aria-label="Swap ${esc(e.name)} for another exercise" title="Swap exercise">⇄</button></li>`).join("") + `</ol></div>`;
+      }
+      d.cardio.forEach((c) => { body += `<div class="cardio"><b>${esc(c.name)}${c.after ? " (after lifting or 6+ h apart)" : ""}</b>${esc(c.detail)}</div>`; });
+      if (d.balance) body += `<div class="warm"><span class="block-label">Balance · 5 min</span><br>Single-leg stand 3 × 30 s each side, then heel-to-toe walk.</div>`;
+      if (!d.lift && d.cardio.length) body += `<div class="warm"><span class="block-label">Mobility · 10 min</span><br>${shuffle(rng(state.seed + d.dow), WARMUPS).slice(0, 4).join(", ")}.</div>`;
+      if (!hasWork) body += `<p class="rest-note">Easy walking toward your step target. Recovery is when you adapt, so keep this day light.</p>`;
+      return `<article class="day${isDone ? " done" : ""}" data-today="${d.dow === todayIdx}">
+        <div class="day-head"><span class="dname">${DOW[d.dow]}</span><div class="dtitle">${title}<small>${sub}</small></div>${kind}</div>
+        <div class="day-body">${body}
+          ${hasWork ? `<label class="donebox"><input type="checkbox" data-done="${d.dow}" ${isDone ? "checked" : ""}> Mark ${DOW[d.dow]} done</label>` : ""}</div></article>`;
+    }).join("");
+
+    // Volume chart
+    const v = weeklyVolume(plan); const [lo, hi] = VOL_TARGET[profile.goal]; const max = 24;
+    $("#volNote").textContent = `Fractional sets (direct = 1, indirect = 0.5). Shaded band = suggested ${lo}–${hi} sets for your goal.`;
+    $("#vol").innerHTML = MUSCLE_LABELS.map(([k, label]) => {
+      const val = Math.round(v[k] * 2) / 2; const w = Math.min(100, (val / max) * 100);
+      return `<div class="vol-row"><span>${label}</span><div class="vol-track"><div class="vol-band" style="left:${(lo / max) * 100}%;width:${((hi - lo) / max) * 100}%"></div><div class="vol-fill${val < lo ? " low" : ""}" style="width:${w}%"></div></div><span class="num" style="text-align:right">${val}</span></div>`;
+    }).join("") + `<div class="vol-axis"><span></span><div><span>0</span><span>6</span><span>12</span><span>18</span><span>24</span></div><span></span></div>`;
+  }
+
+  function renderNutrition() {
+    const n = nut; const p = P(); const goal = profile.goal;
+    const adjText = { fatloss: "20% below maintenance for ~0.5–1% body-weight loss per week", muscle: (n.adj > 1.06 ? "10%" : "5%") + " above maintenance for a lean gain", strength: "5% above maintenance", endurance: "At maintenance; eat more on long-session days", health: "At maintenance" }[goal];
+    $("#fuelSummary").textContent = `Estimated maintenance is ${n.tdee.toLocaleString()} kcal (resting ${n.bmr.toLocaleString()} kcal × your activity). Target: ${adjText}.`;
+    $("#nKcal").innerHTML = `${n.kcal.toLocaleString()}<small> kcal</small>`; $("#nKcalSub").textContent = "per day";
+    $("#nP").innerHTML = `${n.protein}<small> g</small>`; $("#nPSub").textContent = `${n.gkg} g/kg${n.bmi >= 30 ? " of reference weight" : ""} · ${Math.round(n.protein * 4 / n.kcal * 100)}% of energy`;
+    $("#nC").innerHTML = `${n.carbs}<small> g</small>`; $("#nCSub").textContent = `${(n.carbs / p.w).toFixed(1)} g/kg · ${Math.round(n.carbs * 4 / n.kcal * 100)}%`;
+    $("#nF").innerHTML = `${n.fat}<small> g</small>`; $("#nFSub").textContent = `${(n.fat / p.w).toFixed(1)} g/kg · 28%`;
+    const pc = n.protein * 4 / n.kcal * 100, fc = n.fat * 9 / n.kcal * 100, cc = Math.max(0, 100 - pc - fc);
+    $("#macroBar").innerHTML = `<i style="width:${pc}%;background:var(--fuel)"></i><i style="width:${cc}%;background:var(--warn)"></i><i style="width:${fc}%;background:var(--recover)"></i>`;
+    $("#macroLegend").innerHTML = `<span><i style="background:var(--fuel)"></i>Protein</span><span><i style="background:var(--warn)"></i>Carbohydrate</span><span><i style="background:var(--recover)"></i>Fat</span>`;
+    $("#nFiber").innerHTML = `${n.fiber}<small> g</small>`; $("#nWater").innerHTML = `${n.water}<small> L</small>`; $("#nPerMeal").innerHTML = `${n.perMeal}<small> g</small>`;
+
+    const r = rng(state.mealSeed + state.seed);
+    const day = ["Breakfast", "Lunch", "Snack", "Dinner"].map((k) => [k, pick(r, MEALS[k])]);
+    const tp = day.reduce((a, [, m]) => a + m[1], 0), tk = day.reduce((a, [, m]) => a + m[2], 0);
+    const scale = n.kcal / tk;
+    $("#meals").innerHTML = day.map(([k, m]) => `<li><span class="when">${k}</span><span>${esc(m[0])}</span><span class="p">~${Math.round(m[1] * scale)} g protein</span></li>`).join("");
+    $("#mealNote").textContent = `Portions scaled ×${scale.toFixed(2)} to hit ~${n.kcal.toLocaleString()} kcal, giving ~${Math.round(tp * scale)} g protein (target ${n.protein} g). ${tp * scale < n.protein - 10 ? "Add a shake or extra lean protein to close the gap." : "Protein target covered."}`;
+
+    const tips = [
+      "<b>Build each plate</b>: half vegetables or fruit, a quarter protein, a quarter whole-grain or starchy carbs, plus some olive oil, nuts or seeds.",
+      "<b>Mostly minimally processed food.</b> Ultra-processed diets lead people to eat ~500 kcal/day more without noticing.",
+      "<b>Legumes, oily fish (2× a week), nuts, olive oil and whole grains</b>: the core of the Mediterranean pattern, which has the strongest evidence for heart health.",
+      "<b>Spread protein over 3–5 meals</b> of about " + n.perMeal + " g, including one within a few hours after training and optionally before bed.",
+      goal === "endurance" ? "<b>Carbs fuel hard sessions:</b> 30–60 g/hour during sessions longer than ~75 min, and more carbs on long days." : goal === "fatloss" ? "<b>Make the deficit easier</b> with high-protein, high-fibre, high-volume foods (vegetables, soups, fruit, lean protein)." : "<b>Eat carbohydrate around training</b> (1–3 h before) to fuel quality sets.",
+      "<b>Check your trend, not daily weight.</b> Weigh 3–4 mornings a week and adjust calories by 100–200 kcal if the 2–3-week average moves the wrong way."
+    ];
+    $("#foodTips").innerHTML = tips.map((t) => `<li>${t}</li>`).join("");
+  }
+
+  function renderHealth() {
+    const p = P();
+    $("#hSleep").textContent = p.age >= 65 ? "7–8" : "7–9";
+    $("#hSteps").textContent = p.age >= 60 ? "7,000" : "8,000+";
+    $("#hStepsNote").textContent = p.age >= 60 ? "Benefits level off around 6,000–8,000 for over 60s." : "Benefits level off around 8,000–10,000 under 60.";
+    if (p.waist) { const r = p.waist / p.h; $("#hWhtr").textContent = r.toFixed(2); $("#hWhtrNote").textContent = r < 0.5 ? "Healthy range (under 0.5)." : r < 0.6 ? "Increased risk (0.5–0.59). Fat loss and activity help." : "High risk (0.6+). Worth discussing with your doctor."; }
+    else { $("#hWhtr").textContent = "–"; $("#hWhtrNote").textContent = "Add your waist to check. Keep it under 0.5."; }
+    $("#hrNote").textContent = `Estimated max heart rate ${plan.hrMax} bpm (208 − 0.7 × age). Estimates can be off by 10+ bpm; use the talk test as a cross-check.`;
+    const zones = [["Easy / recovery", 50, 60, "Warm-ups, walking"], ["Zone 2 (aerobic base)", 60, 70, "Can talk in full sentences"], ["Tempo", 70, 85, "Short phrases only"], ["High-intensity intervals", 85, 95, "A few words at most"]];
+    $("#zones").innerHTML = `<thead><tr><th>Zone</th><th>% max</th><th>Heart rate</th><th>Feels like</th></tr></thead><tbody>` +
+      zones.map(([z, a, b, f]) => `<tr><td>${z}</td><td class="num">${a}–${b}%</td><td class="num"><b>${Math.round(plan.hrMax * a / 100)}–${Math.round(plan.hrMax * b / 100)}</b> bpm</td><td class="muted">${f}</td></tr>`).join("") + `</tbody>`;
+    renderHabits();
+    $("#refs").innerHTML = REFS.map(([c, tag, text, src, url]) => `<div class="ref"><div><span class="chip ${c}">${tag}</span></div><div><p>${text}</p><p class="src">${esc(src)}${url ? ` <a href="${url}" target="_blank" rel="noopener">Source</a>` : ""}</p></div></div>`).join("");
+  }
+
+  function renderHabits() {
+    const today = new Date(); const k = "ff-habits-" + dayKey(today); const on = store.get(k, []);
+    $("#todayLabel").textContent = today.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "short" });
+    $("#habits").innerHTML = HABITS.map(([id, label]) => `<label class="habit${on.includes(id) ? " on" : ""}"><input type="checkbox" data-habit="${id}" ${on.includes(id) ? "checked" : ""}> ${label}</label>`).join("");
+    let heat = "";
+    for (let i = 6; i >= 0; i--) { const d = new Date(today); d.setDate(d.getDate() - i); const c = store.get("ff-habits-" + dayKey(d), []).length; heat += `<div><i title="${c} of 8"><b style="height:${(c / 8) * 100}%"></b></i>${d.toLocaleDateString(undefined, { weekday: "narrow" })}</div>`; }
+    $("#heat").innerHTML = heat;
+    $("#kHabits").innerHTML = `${on.length}<small>/8</small>`; $("#kHabitsBar").style.width = (on.length / 8) * 100 + "%";
+  }
+
+  function renderSummary() {
+    const total = plan.days.filter((d) => d.lift || d.cardio.length).length; const done = store.get(doneKey(), []).length;
+    $("#kSessions").innerHTML = `${done}<small>/${total}</small>`; $("#kSessionsBar").style.width = (total ? (done / total) * 100 : 0) + "%";
+    $("#kCardio").innerHTML = `${plan.cardioMin}<small> min</small>`;
+    $("#kCardioSub").textContent = plan.cardioMin >= 150 ? "Meets WHO 150–300 min" : `Steps + intervals top up to WHO 150 min`;
+    $("#kKcal").innerHTML = `${nut.kcal.toLocaleString()}<small> kcal</small>`; $("#kKcalSub").textContent = `Maintenance ≈ ${nut.tdee.toLocaleString()}`;
+    $("#kProtein").innerHTML = `${nut.protein}<small> g</small>`; $("#kProteinSub").textContent = `${nut.gkg} g/kg · ${nut.perMeal} g per meal`;
+  }
+
+  /* ---------- Events ---------- */
+  document.addEventListener("change", (e) => {
+    const t = e.target;
+    if (FIELDS.includes(t.id)) { readProfile(); isExample = false; store.set("ff-profile", profile); state.swaps = {}; saveState(); render(); return; }
+    if (t.dataset.done !== undefined) {
+      const k = doneKey(); let d = store.get(k, []); const v = Number(t.dataset.done);
+      d = t.checked ? Array.from(new Set(d.concat(v))) : d.filter((x) => x !== v); store.set(k, d);
+      t.closest(".day").classList.toggle("done", t.checked); renderSummary(); return;
+    }
+    if (t.dataset.habit) {
+      const k = "ff-habits-" + dayKey(new Date()); let h = store.get(k, []);
+      h = t.checked ? Array.from(new Set(h.concat(t.dataset.habit))) : h.filter((x) => x !== t.dataset.habit); store.set(k, h); renderHabits();
+    }
+  });
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-swap]"); if (!b) return;
+    const [di, ei] = b.dataset.swap.split("-").map(Number); const day = plan.days[di]; const cur = day.lift.ex[ei];
+    const used = new Set(day.lift.ex.map((x) => x.name));
+    const c = candidates(cur.pattern, profile.equip, used);
+    if (!c.length) { b.title = "No other option for this movement with your equipment"; return; }
+    state.swaps[`${di}-${ei}`] = c[Math.floor(Math.random() * c.length)].name; saveState(); renderTraining();
+  });
+  $("#newPlan").addEventListener("click", (e) => {
+    state.seed = (Math.random() * 1e9) | 0; state.mealSeed = (Math.random() * 1e6) | 0; state.swaps = {}; state.created = new Date().toISOString(); saveState(); render();
+    const btn = e.currentTarget; btn.classList.remove("go"); void btn.offsetWidth; btn.classList.add("go");
+    if (location.hash !== "#training" && location.hash !== "") { location.hash = "#training"; }
+  });
+  $("#newMeals").addEventListener("click", () => { state.mealSeed = (Math.random() * 1e6) | 0; saveState(); renderNutrition(); });
+  function saveState() { store.set("ff-state", state); }
+
+  function route() {
+    const v = (location.hash || "#training").slice(1); const view = ["training", "nutrition", "health", "research"].includes(v) ? v : "training";
+    document.querySelectorAll(".view").forEach((s) => { s.hidden = s.id !== "view-" + view; });
+    document.querySelectorAll("nav.tabs a").forEach((a) => { a.toggleAttribute("aria-current", false); if (a.dataset.view === view) a.setAttribute("aria-current", "page"); });
+  }
+  window.addEventListener("hashchange", route);
+
+  if (window.matchMedia("(max-width: 860px)").matches) $("#profileDetails").open = false;
+  writeProfile(); saveState(); route(); render();
+})();
+</script>
+</body>
+</html>
