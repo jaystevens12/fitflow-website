@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EV Driving Coach | STS Tech Group</title>
+<style>
+  :root {
+    --navy: #0a1628; --navy-mid: #0f2040; --navy-light: #1a3a5c;
+    --blue: #1e90ff; --blue-light: #4db8ff; --gold: #f0a500; --gold-light: #ffc94d;
+    --green: #00c853; --red: #ff4444; --text: #e8f0fe; --text-muted: #8fa8c8;
+    --card: rgba(255,255,255,0.04); --border: rgba(255,255,255,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--navy); color: var(--text); display: flex; flex-direction: column; }
+  header { background: linear-gradient(135deg,var(--navy-mid),var(--navy-light)); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg,var(--green),var(--blue)); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .logo h1 { font-size: 16px; font-weight: 700; }
+  .logo p { font-size: 11px; color: var(--text-muted); }
+  .hdr-links { display: flex; gap: 8px; align-items: center; }
+  .badge { background: rgba(0,200,83,0.12); border: 1px solid var(--green); color: var(--green); padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  a.navlink { color: var(--text-muted); font-size: 12px; text-decoration: none; border: 1px solid var(--border); padding: 4px 10px; border-radius: 20px; }
+  a.navlink:hover { color: var(--blue); border-color: var(--blue); }
+
+  .layout { flex: 1; display: grid; grid-template-columns: 280px 1fr 300px; gap: 16px; padding: 16px 24px; max-width: 1500px; width: 100%; margin: 0 auto; min-height: 0; }
+  .panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; overflow-y: auto; min-height: 0; }
+  .panel-title { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+
+  /* Lessons */
+  .lesson { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; cursor: pointer; font-size: 13px; border: 1px solid transparent; transition: all .15s; }
+  .lesson:hover { background: rgba(255,255,255,0.04); border-color: var(--border); }
+  .lesson .num { width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
+  .lesson.done .num { background: var(--green); border-color: var(--green); color: var(--navy); font-weight: 700; }
+  .prog { background: rgba(255,255,255,0.07); border-radius: 4px; height: 6px; margin: 4px 0 14px; overflow: hidden; }
+  .prog-fill { height: 100%; background: linear-gradient(90deg,var(--green),var(--blue)); width: 0; transition: width .4s; }
+  .prog-lbl { font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between; }
+
+  /* Chat */
+  .chat { display: flex; flex-direction: column; padding: 0; overflow: hidden; }
+  .chat-head { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+  .avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg,var(--green),var(--blue)); display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+  .chat-head h2 { font-size: 14px; }
+  .chat-head p { font-size: 11px; color: var(--green); }
+  .msgs { flex: 1; overflow-y: auto; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+  .msg { display: flex; gap: 10px; max-width: 88%; }
+  .msg.user { align-self: flex-end; flex-direction: row-reverse; }
+  .bubble { padding: 11px 14px; border-radius: 12px; font-size: 13.5px; line-height: 1.6; }
+  .msg.bot .bubble { background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-top-left-radius: 3px; }
+  .msg.user .bubble { background: var(--blue); color: white; border-top-right-radius: 3px; }
+  .bubble h4 { font-size: 14px; margin-bottom: 6px; color: var(--gold-light); }
+  .bubble ul, .bubble ol { margin: 6px 0 6px 18px; }
+  .bubble li { margin: 3px 0; }
+  .bubble b { color: #fff; }
+  .bubble p + p { margin-top: 8px; }
+  .tip { margin-top: 8px; background: rgba(0,200,83,0.08); border-left: 3px solid var(--green); padding: 7px 10px; border-radius: 6px; font-size: 12.5px; }
+  .warn { margin-top: 8px; background: rgba(240,165,0,0.08); border-left: 3px solid var(--gold); padding: 7px 10px; border-radius: 6px; font-size: 12.5px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .chip { background: transparent; border: 1px solid var(--border); color: var(--blue-light); padding: 5px 11px; border-radius: 16px; font-size: 12px; cursor: pointer; transition: all .15s; font-family: inherit; }
+  .chip:hover { border-color: var(--blue); background: rgba(30,144,255,0.1); }
+  .quiz-opt { display: block; width: 100%; text-align: left; margin-top: 6px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; font-family: inherit; }
+  .quiz-opt:hover:not(:disabled) { border-color: var(--blue); }
+  .quiz-opt.right { border-color: var(--green); background: rgba(0,200,83,0.12); }
+  .quiz-opt.wrong { border-color: var(--red); background: rgba(255,68,68,0.12); }
+  .quiz-opt:disabled { cursor: default; }
+  .typing span { display: inline-block; width: 6px; height: 6px; margin: 0 2px; background: var(--text-muted); border-radius: 50%; animation: blink 1.2s infinite; }
+  .typing span:nth-child(2) { animation-delay: .2s; } .typing span:nth-child(3) { animation-delay: .4s; }
+  @keyframes blink { 0%,80%,100% { opacity: .2; } 40% { opacity: 1; } }
+  .composer { border-top: 1px solid var(--border); padding: 12px; display: flex; gap: 8px; }
+  .composer input { flex: 1; background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 8px; padding: 11px 14px; color: var(--text); font-size: 14px; outline: none; font-family: inherit; }
+  .composer input:focus { border-color: var(--blue); }
+  .btn { padding: 9px 18px; border-radius: 8px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; transition: all .2s; font-family: inherit; }
+  .btn-primary { background: var(--blue); color: white; }
+  .btn-primary:hover { background: var(--blue-light); }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
+  .btn-outline:hover { border-color: var(--blue); color: var(--blue); }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+  /* Tools */
+  .tool { border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 14px; }
+  .tool h3 { font-size: 13px; margin-bottom: 10px; }
+  label { display: block; font-size: 11px; color: var(--text-muted); margin: 8px 0 4px; }
+  .tool input, .tool select { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 7px; padding: 8px 10px; color: var(--text); font-size: 13px; outline: none; font-family: inherit; }
+  .tool select option { background: var(--navy-mid); }
+  .tool input:focus, .tool select:focus { border-color: var(--blue); }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .out { margin-top: 10px; background: rgba(255,255,255,0.03); border-radius: 8px; padding: 10px; font-size: 12px; }
+  .out .trow { display: flex; justify-content: space-between; padding: 3px 0; }
+  .out .tval { font-weight: 700; color: var(--gold); }
+  .out .big { font-size: 22px; font-weight: 800; color: var(--green); }
+  .disclaimer { font-size: 10.5px; color: var(--text-muted); line-height: 1.5; margin-top: 6px; }
+
+  .mobile-tabs { display: none; }
+  @media (max-width: 1100px) {
+    .layout { grid-template-columns: 1fr; padding: 12px 16px; }
+    .mobile-tabs { display: flex; gap: 2px; background: var(--navy-mid); border-bottom: 1px solid var(--border); padding: 0 16px; overflow-x: auto; }
+    .mobile-tabs div { padding: 11px 14px; font-size: 12px; color: var(--text-muted); border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap; }
+    .mobile-tabs div.active { color: var(--green); border-bottom-color: var(--green); }
+    .layout > .panel { display: none; }
+    .layout > .panel.m-active { display: flex; }
+    .layout > .panel:not(.chat).m-active { display: block; }
+    .msg { max-width: 96%; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🚗</div>
+    <div><h1>EV Driving Coach</h1><p>STS Tech Group — Learn to drive, charge and care for an electric car</p></div>
+  </div>
+  <div class="hdr-links">
+    <span class="badge">⚡ Offline bot</span>
+    <a class="navlink" href="index.html">☀️ Solar Advisor</a>
+  </div>
+</header>
+
+<div class="mobile-tabs">
+  <div data-p="p-lessons" onclick="mtab(this)">📚 Lessons</div>
+  <div data-p="p-chat" class="active" onclick="mtab(this)">💬 Coach</div>
+  <div data-p="p-tools" onclick="mtab(this)">🧮 Calculators</div>
+</div>
+
+<div class="layout">
+  <!-- LESSONS -->
+  <aside class="panel" id="p-lessons">
+    <div class="panel-title">Learning Path</div>
+    <div class="prog-lbl"><span>Progress</span><span id="progTxt">0 / 0</span></div>
+    <div class="prog"><div class="prog-fill" id="progFill"></div></div>
+    <div id="lessonList"></div>
+    <div style="margin-top:14px;display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn btn-outline btn-sm" onclick="startQuiz()">🎯 Take the quiz</button>
+      <button class="btn btn-outline btn-sm" onclick="resetProgress()">↺ Reset</button>
+    </div>
+  </aside>
+
+  <!-- CHAT -->
+  <section class="panel chat m-active" id="p-chat">
+    <div class="chat-head">
+      <div class="avatar">⚡</div>
+      <div><h2>Volt, your EV coach</h2><p>● Ask me anything about driving electric</p></div>
+      <button class="btn btn-outline btn-sm" style="margin-left:auto" onclick="clearChat()">New chat</button>
+    </div>
+    <div class="msgs" id="msgs" aria-live="polite"></div>
+    <form class="composer" onsubmit="send(event)">
+      <input id="inp" autocomplete="off" placeholder="e.g. How does one-pedal driving work?" aria-label="Message">
+      <button class="btn btn-primary" type="submit">Send</button>
+    </form>
+  </section>
+
+  <!-- TOOLS -->
+  <aside class="panel" id="p-tools">
+    <div class="panel-title">EV Calculators</div>
+
+    <div class="tool">
+      <h3>🔌 Charging cost</h3>
+      <div class="row2">
+        <div><label>Battery (kWh)</label><input id="cBat" type="number" value="60" min="10" step="1"></div>
+        <div><label>Tariff (R/kWh)</label><input id="cRate" type="number" value="3.20" min="0" step="0.05"></div>
+      </div>
+      <div class="row2">
+        <div><label>From (%)</label><input id="cFrom" type="number" value="20" min="0" max="100"></div>
+        <div><label>To (%)</label><input id="cTo" type="number" value="80" min="0" max="100"></div>
+      </div>
+      <label>Charger</label>
+      <select id="cKw">
+        <option value="2.3">Wall socket (2.3 kW)</option>
+        <option value="7.2" selected>Home wallbox (7.2 kW)</option>
+        <option value="11">AC public (11 kW)</option>
+        <option value="22">AC public (22 kW)</option>
+        <option value="60">DC fast (60 kW)</option>
+        <option value="150">DC ultra-fast (150 kW)</option>
+      </select>
+      <div class="out" id="cOut"></div>
+    </div>
+
+    <div class="tool">
+      <h3>🛣️ Real-world range</h3>
+      <div class="row2">
+        <div><label>Usable battery (kWh)</label><input id="rBat" type="number" value="60" min="10"></div>
+        <div><label>Charge now (%)</label><input id="rSoc" type="number" value="80" min="0" max="100"></div>
+      </div>
+      <label>Driving style</label>
+      <select id="rStyle">
+        <option value="14">City, gentle (14 kWh/100km)</option>
+        <option value="16" selected>Mixed (16 kWh/100km)</option>
+        <option value="19">Highway 100 km/h (19 kWh/100km)</option>
+        <option value="22">Highway 120 km/h (22 kWh/100km)</option>
+      </select>
+      <div class="row2">
+        <div><label>Aircon / heater</label>
+          <select id="rHvac"><option value="1">Off</option><option value="1.07" selected>Moderate</option><option value="1.15">Heavy</option></select></div>
+        <div><label>Load</label>
+          <select id="rLoad"><option value="1">Normal</option><option value="1.08">Full car</option><option value="1.5">Towing</option></select></div>
+      </div>
+      <div class="out" id="rOut"></div>
+    </div>
+
+    <div class="tool">
+      <h3>⛽ EV vs petrol (per month)</h3>
+      <div class="row2">
+        <div><label>km / month</label><input id="pKm" type="number" value="1500" min="0"></div>
+        <div><label>Petrol R/litre</label><input id="pPetrol" type="number" value="22.50" step="0.1"></div>
+      </div>
+      <div class="row2">
+        <div><label>Petrol car L/100km</label><input id="pL" type="number" value="7.5" step="0.1"></div>
+        <div><label>EV kWh/100km</label><input id="pE" type="number" value="16" step="0.5"></div>
+      </div>
+      <div class="out" id="pOut"></div>
+    </div>
+    <p class="disclaimer">These are estimates only. Real results depend on your car, the weather, the terrain, tyres and how you drive. Always follow your vehicle's owner's manual.</p>
+  </aside>
+</div>
+
+<script>
+/* ===================== KNOWLEDGE BASE ===================== */
+// Each entry: id, title, kw (keywords, with weights), a (HTML answer), next (follow-up ids)
+const KB = [
+ { id:'start', title:'Your first EV drive', lesson:1,
+   kw:{'first drive':5,'first time':4,'start':2,'begin':2,'beginner':3,'new':1,'how to drive':4,'basics':3,'switch on':3,'turn on':3,'ignition':3,'ready':2,'gear':3,'gears':3,'clutch':4,'automatic':2,'drive mode selector':3},
+   a:`<h4>🚦 Your first EV drive</h4>
+   <p>Driving an EV feels like driving an automatic car, only simpler and smoother:</p>
+   <ol>
+     <li><b>Power on.</b> Press the brake and push the Start button (some cars switch on when you sit down with the key). There's no engine noise, so look for a <b>"READY"</b> light or a green car icon on the dash.</li>
+     <li><b>Choose a direction.</b> Use <b>D</b> (Drive), <b>R</b> (Reverse) or <b>P</b> (Park). There's no clutch and no gear changes.</li>
+     <li><b>Pull away gently.</b> EVs make full power instantly, so press the accelerator softly at first.</li>
+     <li><b>Slowing down.</b> When you lift off the accelerator, the car slows itself with <b>regenerative braking</b>, which feels like strong engine braking.</li>
+     <li><b>Park.</b> Select P, apply the parking brake (often automatic) and press Start again to switch off.</li>
+   </ol>
+   <div class="warn">⚠️ EVs are almost silent at low speed. Watch out for pedestrians and cyclists in car parks and driveways, because they may not hear you coming.</div>`,
+   next:['regen','torque','range']},
+
+ { id:'torque', title:'Instant acceleration', lesson:2,
+   kw:{'acceleration':4,'accelerate':4,'torque':5,'fast':2,'quick':2,'power':2,'jerky':3,'pedal sensitive':4,'throttle':3,'wheelspin':4,'overtake':3,'overtaking':3,'sport mode':3,'eco mode':3,'drive modes':4,'modes':2},
+   a:`<h4>⚡ Instant torque and drive modes</h4>
+   <p>An electric motor gives <b>all of its torque from 0 rpm</b>. Even a modest family EV can pull away as quickly as a sports car.</p>
+   <ul>
+     <li><b>Squeeze, don't stab.</b> Press the accelerator gradually, especially in wet weather or on gravel, so the wheels don't spin.</li>
+     <li><b>Overtaking is easy.</b> Power comes instantly, without waiting for a kick-down, but be careful not to go faster than you meant to.</li>
+     <li><b>Drive modes:</b> <i>Eco</i> softens the accelerator and limits climate power to save range. <i>Normal</i> is balanced. <i>Sport</i> sharpens response and uses more energy.</li>
+   </ul>
+   <div class="tip">💡 Use Eco mode for your first few days while you get used to how responsive the car is.</div>`,
+   next:['regen','efficient','tyres']},
+
+ { id:'regen', title:'Regenerative braking & one-pedal driving', lesson:3,
+   kw:{'regen':6,'regenerative':6,'one pedal':6,'one-pedal':6,'brake':3,'braking':3,'brakes':3,'paddle':3,'paddles':3,'b mode':4,'slow down':3,'coast':3,'coasting':3,'deceleration':3,'i-pedal':5,'e-pedal':5},
+   a:`<h4>🔄 Regenerative braking and one-pedal driving</h4>
+   <p>When you lift off the accelerator, the motor works in reverse as a <b>generator</b>. It slows the car down and puts energy back into the battery, recovering up to 60–70% of that energy in stop-start traffic.</p>
+   <ul>
+     <li><b>One-pedal driving:</b> with strong regen switched on (called <i>B mode</i>, <i>i-Pedal</i>, <i>e-Pedal</i> or <i>Hold</i>, depending on the car), lifting off fully can bring the car to a complete stop. In daily driving you'll hardly use the brake pedal.</li>
+     <li><b>Paddles:</b> many cars have steering-wheel paddles that let you choose how strong the regen is.</li>
+     <li><b>How to master it:</b> lift off <i>smoothly and early</i>, the same way you'd ease off before a robot (traffic light). Treat the accelerator like a dimmer switch.</li>
+     <li><b>Brake lights</b> come on automatically when regen slows the car hard, so drivers behind you are warned.</li>
+   </ul>
+   <div class="warn">⚠️ Your foot must <b>always</b> be ready to press the brake pedal. Regen is weaker or switched off when the battery is full or very cold, so the car may coast further than you expect.</div>
+   <div class="tip">💡 Brake pads on an EV can last over 100,000 km because regen does most of the work. Use the brakes properly now and then so the discs don't rust.</div>`,
+   next:['efficient','maintenance','safety']},
+
+ { id:'range', title:'Range & what affects it', lesson:4,
+   kw:{'range':5,'how far':5,'distance':3,'km':1,'kilometres':2,'anxiety':4,'range anxiety':6,'wltp':5,'estimate':2,'guess-o-meter':5,'gom':4,'lose range':4,'range drop':4,'affect range':5,'reduce range':4},
+   a:`<h4>🛣️ Range: what's real and what affects it</h4>
+   <p>The advertised <b>WLTP range</b> is measured in a lab. In the real world, expect about <b>80–90%</b> of it around town and <b>65–80%</b> at highway speeds.</p>
+   <p><b>Things that reduce range, roughly from biggest to smallest:</b></p>
+   <ol>
+     <li><b>Speed.</b> Air resistance grows sharply with speed. Driving at 120 km/h uses about 30–40% more energy than at 90 km/h.</li>
+     <li><b>Temperature.</b> Cold batteries are less efficient, and cabin heating uses energy. Hot days mean aircon use.</li>
+     <li><b>Hills and wind.</b> Climbing uses energy. You get some back going downhill through regen.</li>
+     <li><b>Load and towing.</b> A full car, a roof box or a trailer all add drag and weight.</li>
+     <li><b>Tyres.</b> Under-inflated or wide tyres add rolling resistance.</li>
+   </ol>
+   <p>In practice, most South Africans drive less than 50 km a day, which is a fraction of any modern EV's range.</p>
+   <div class="tip">💡 Try the <b>Real-world range</b> calculator on the right to estimate your own trips.</div>`,
+   next:['efficient','roadtrip','weather']},
+
+ { id:'efficient', title:'Driving efficiently (more km per charge)', lesson:5,
+   kw:{'efficient':5,'efficiency':5,'save energy':5,'maximise':4,'maximize':4,'extend range':6,'more range':5,'hypermile':5,'eco driving':5,'kwh/100km':5,'wh/km':5,'consumption':4,'tips':2,'economy':3},
+   a:`<h4>🌱 Getting the most kilometres from every kWh</h4>
+   <ul>
+     <li><b>Watch your speed.</b> Dropping from 120 to 110 km/h on the highway can add 10% or more to your range.</li>
+     <li><b>Anticipate.</b> Look far ahead and lift off early so regen does the slowing. Avoid hard braking followed by hard acceleration.</li>
+     <li><b>Precondition while plugged in.</b> Heat or cool the cabin (and the battery) before you leave, using grid or solar power rather than the battery.</li>
+     <li><b>Use seat and steering-wheel heaters.</b> They use far less energy than heating all the air in the cabin.</li>
+     <li><b>Check tyre pressures monthly</b> and keep them at the recommended level.</li>
+     <li><b>Take off the roof racks</b> when you're not using them.</li>
+     <li><b>Use Eco mode</b> on long trips.</li>
+   </ul>
+   <p><b>Efficiency units:</b> EVs are measured in <b>kWh/100 km</b> (like L/100 km). A small hatch might use 13–15. A large SUV might use 20–24.</p>`,
+   next:['range','weather','charging-cost']},
+
+ { id:'charging', title:'Charging basics: AC vs DC', lesson:6,
+   kw:{'charge':3,'charging':4,'charger':4,'plug in':4,'how to charge':6,'ac':3,'dc':3,'fast charge':5,'fast charging':5,'rapid':3,'level 2':4,'level 1':4,'wallbox':5,'kw':2,'how long':3,'charge time':5,'charging speed':5,'supercharger':4},
+   a:`<h4>🔌 Charging basics: AC vs DC</h4>
+   <p>There are three main ways to charge:</p>
+   <ul>
+     <li><b>Wall socket (≈2.3 kW AC).</b> Use the portable cable that comes with the car. This adds about <b>10–15 km of range per hour</b>. It's fine overnight if you drive short distances.</li>
+     <li><b>Home or work wallbox (7–22 kW AC).</b> This is the best everyday option. A 7 kW unit adds about <b>40–50 km per hour</b> and fills most cars overnight. Your car's on-board charger limits AC speed, often to 7 or 11 kW.</li>
+     <li><b>DC fast charger (50–350 kW).</b> Found on highways and at malls. It charges from <b>20% to 80% in roughly 20–45 minutes</b>, depending on the car.</li>
+   </ul>
+   <p><b>Why charging slows above 80%:</b> the car deliberately reduces the power as the battery fills, to protect the cells. On road trips it's usually quicker to charge to 80% and drive on.</p>
+   <div class="tip">💡 Think of your EV like your phone: plug in at home overnight, and use fast chargers only when you're travelling.</div>`,
+   next:['connectors','etiquette','battery-health']},
+
+ { id:'connectors', title:'Plug & connector types', lesson:7,
+   kw:{'connector':6,'connectors':6,'plug':3,'plugs':3,'type 2':6,'type2':6,'ccs':6,'ccs2':6,'chademo':6,'nacs':5,'socket type':5,'cable':3,'adapter':4,'mennekes':5},
+   a:`<h4>🔋 Plug and connector types</h4>
+   <ul>
+     <li><b>Type 2 (Mennekes).</b> The standard AC plug in South Africa, Europe and the UK. Used for home and public AC charging. Public AC points often need you to bring <b>your own Type 2 cable</b>.</li>
+     <li><b>CCS2 (Combo 2).</b> A Type 2 plug with two large DC pins underneath. This is the main DC fast-charging standard in SA and Europe, and the cable is always attached to the charger.</li>
+     <li><b>CHAdeMO.</b> An older Japanese DC standard, used on earlier Nissan Leafs. It's becoming less common, so check that your route has it.</li>
+     <li><b>NACS / Tesla.</b> Common in North America. In SA, Teslas are grey imports or use CCS2.</li>
+   </ul>
+   <div class="tip">💡 Apps like <b>PlugShare</b> let you filter by connector type so you only see chargers your car can use.</div>`,
+   next:['etiquette','roadtrip','charging']},
+
+ { id:'etiquette', title:'Public charging step by step & etiquette', lesson:8,
+   kw:{'public charging':6,'public charger':6,'etiquette':6,'rules':2,'how to use charger':6,'station':3,'charging station':5,'app':2,'pay':3,'payment':3,'rfid':4,'queue':4,'ice':2,'iced':4,'blocked':3},
+   a:`<h4>🤝 Using a public charger (and the unwritten rules)</h4>
+   <p><b>Step by step:</b></p>
+   <ol>
+     <li>Check the charger status on its network app (for example GridCars, Zero Carbon Charge, Chargify or Rubicon) or on PlugShare before you arrive.</li>
+     <li>Park so the cable reaches your car's charging port.</li>
+     <li>Start the session with the app, an RFID card or a tap-to-pay card reader.</li>
+     <li>Plug in firmly. Charging usually starts within about 30 seconds and the car shows its progress.</li>
+     <li>To finish, stop the session in the app or car, unlock the car, unplug and hang the cable back up neatly.</li>
+   </ol>
+   <p><b>Etiquette:</b></p>
+   <ul>
+     <li>Move your car <b>as soon as you're done</b>. Many networks charge idle fees.</li>
+     <li>On a busy DC charger, charge to <b>about 80%</b> and let the next person have a turn.</li>
+     <li>Never park a petrol car in an EV bay. Being "ICE'd" is every EV driver's pet peeve.</li>
+     <li>Report broken chargers in the app to help other drivers.</li>
+   </ul>`,
+   next:['roadtrip','charging-cost','connectors']},
+
+ { id:'battery-health', title:'Looking after the battery', lesson:9,
+   kw:{'battery health':6,'battery care':6,'care':2,'battery life':6,'degradation':6,'degrade':5,'80%':4,'100%':4,'20%':3,'charge to':4,'soh':5,'state of health':6,'warranty':4,'replace battery':5,'battery replacement':5,'lifespan':5,'how long battery last':6,'lfp':5,'nmc':5,'battery':2},
+   a:`<h4>🔋 Looking after your battery</h4>
+   <p>Modern EV batteries are designed to outlast the car. Most keep <b>about 80–90% of their capacity after 200,000 km</b>, and warranties typically cover <b>8 years / 160,000 km</b>.</p>
+   <p><b>Habits that keep the battery healthy:</b></p>
+   <ul>
+     <li><b>Daily charge limit of 80%</b> (set it in the car or app). Charge to 100% only before a long trip, and then set off soon after.</li>
+     <li><b>Avoid leaving it near 0%</b> for long periods. Try to plug in before it drops below about 10–20%.</li>
+     <li><b>Charge mostly on AC</b> at home. DC fast charging is fine, but daily use adds a little heat stress.</li>
+     <li><b>Park in the shade</b> on hot days if you can. Heat is the battery's biggest long-term enemy.</li>
+   </ul>
+   <div class="tip">💡 <b>LFP batteries are different.</b> Many BYD, MG and standard-range Tesla models use LFP chemistry, which is happy being charged to <b>100%</b> regularly. Manufacturers often recommend doing this at least weekly so the range estimate stays accurate. Check your manual.</div>`,
+   next:['charging','weather','maintenance']},
+
+ { id:'charging-cost', title:'What does charging cost?', lesson:10,
+   kw:{'cost':4,'costs':4,'price':4,'how much':4,'expensive':3,'cheap':3,'rand':3,'tariff':4,'per kwh':5,'r/kwh':5,'save money':4,'savings':4,'petrol':3,'fuel':3,'running cost':5,'cost to charge':6},
+   a:`<h4>💰 What does charging cost?</h4>
+   <p>The formula is simple: <b>energy added (kWh) × price per kWh</b>. Allow for about 10% charging losses on AC.</p>
+   <ul>
+     <li><b>Home (Eskom or municipal tariff, about R2.80–R4.00/kWh):</b> a 60 kWh car charged from 20% to 80% takes in about 36 kWh, which costs <b>about R110–R150</b> for roughly 220 km.</li>
+     <li><b>Off-peak or time-of-use tariffs</b> can halve that if you schedule charging overnight.</li>
+     <li><b>Home solar:</b> daytime charging from your own panels is nearly free once the system has paid for itself.</li>
+     <li><b>Public DC fast charging (about R6–R9/kWh):</b> similar to, or a bit cheaper than, petrol per km. That's convenient on road trips, but not the cheapest way to charge every day.</li>
+   </ul>
+   <div class="tip">💡 Use the <b>Charging cost</b> and <b>EV vs petrol</b> calculators on the right with your own tariff.</div>`,
+   next:['home-solar','efficient','charging']},
+
+ { id:'home-solar', title:'Home charging, solar & load-shedding', lesson:11,
+   kw:{'home charging':6,'home':2,'install':4,'installation':4,'electrician':5,'solar':6,'pv':4,'panels':3,'inverter':5,'load shedding':6,'loadshedding':6,'load-shedding':6,'eskom':4,'power cut':5,'outage':4,'backup':3,'v2h':6,'v2g':6,'bidirectional':6,'garage':3,'coc':4},
+   a:`<h4>🏠 Home charging, solar and load-shedding</h4>
+   <ul>
+     <li><b>Install a wallbox</b> using a registered electrician, who should issue a <b>Certificate of Compliance (CoC)</b>. A dedicated circuit with an earth-leakage device (RCD) is required. A typical single-phase installation is 7.4 kW (32 A).</li>
+     <li><b>Solar pairing:</b> a "solar-aware" or smart charger can follow your excess PV output and charge the car from sunshine in the daytime. This works well if you work from home or the car is parked during the day.</li>
+     <li><b>Inverter and battery systems:</b> most home backup inverters (5–8 kW) <b>can't run a 7 kW EV charger</b> as well as the house during an outage. Set the charger to stop when the grid is down, or limit it to a few amps.</li>
+     <li><b>Load-shedding planning:</b> check your schedule on EskomSePush and plug in when power is on. A car charged to 80% will cover days of normal driving.</li>
+     <li><b>V2H / V2L:</b> some EVs (such as the Hyundai Ioniq 5, Kia EV6 and BYD Atto 3) can <b>power appliances or even a home</b> from the car's battery, which can be useful during outages.</li>
+   </ul>
+   <div class="tip">💡 Want to size a solar system that also covers your EV? Use our <a href="index.html" style="color:var(--gold)">Solar & Battery Advisor</a> and add about 250–350 kWh a month for typical EV use.</div>`,
+   next:['charging-cost','charging','battery-health']},
+
+ { id:'roadtrip', title:'Planning a road trip', lesson:12,
+   kw:{'road trip':6,'roadtrip':6,'long distance':6,'long trip':6,'travel':3,'holiday':3,'journey':3,'route':4,'plan':3,'planning':3,'abrp':6,'plugshare':5,'n1':4,'n2':4,'n3':4,'cape town':3,'johannesburg':3,'durban':3,'highway':3},
+   a:`<h4>🗺️ Planning an EV road trip</h4>
+   <ol>
+     <li><b>Plan your stops.</b> Use <b>A Better Route Planner (ABRP)</b> or your car's built-in navigation, which work out charging stops from your car's real consumption. Check stops on <b>PlugShare</b> for recent reviews.</li>
+     <li><b>Have a plan B.</b> Know the next charger after each stop in case one is busy or out of order.</li>
+     <li><b>Leave with 100%</b> (charge just before you set off) and arrive at each charger with <b>10–20%</b> to spare.</li>
+     <li><b>Charge to 80%, not 100%,</b> at fast chargers. The last 20% is slow, so short frequent stops are quicker overall.</li>
+     <li><b>Precondition the battery.</b> Choose the charger as your navigation destination so the car warms the battery for faster charging.</li>
+     <li><b>Drive at 100–110 km/h</b> instead of 120 on long stretches if the gap between chargers is tight.</li>
+     <li><b>Pack your cables:</b> the portable charging cable and a Type 2 cable, in case your destination only has a socket or AC point.</li>
+   </ol>
+   <div class="tip">💡 Ask your accommodation in advance whether you can plug in overnight. Even a normal plug point will recharge you by morning.</div>`,
+   next:['etiquette','range','emergency']},
+
+ { id:'weather', title:'Hot & cold weather', lesson:13,
+   kw:{'weather':5,'cold':5,'winter':5,'hot':4,'heat':4,'summer':4,'temperature':4,'precondition':6,'preconditioning':6,'heater':4,'aircon':4,'air conditioning':4,'climate':3,'snow':4,'rain':3,'heat pump':5},
+   a:`<h4>🌡️ Driving in hot and cold weather</h4>
+   <ul>
+     <li><b>Cold</b> (for example a Highveld winter morning or a mountain pass): range can drop <b>by 10–30%</b> and charging is slower until the battery warms up. Regen may also be limited at first.</li>
+     <li><b>Heat:</b> the car uses some energy to cool the battery and the cabin. Expect a modest range loss of 5–15%.</li>
+     <li><b>Preconditioning</b> is your best friend. Schedule a departure time in the app while the car is plugged in, so the cabin and battery are already at the right temperature when you leave.</li>
+     <li>A <b>heat pump</b> (standard or optional on many EVs) is 2–3 times more efficient than a resistive heater.</li>
+     <li><b>Rain and washing:</b> EVs are sealed and perfectly safe to drive in rain, put through a car wash and charge in the rain. Never drive through deep flood water, though, just as you wouldn't in any car.</li>
+   </ul>`,
+   next:['efficient','range','battery-health']},
+
+ { id:'safety', title:'EV safety', lesson:14,
+   kw:{'safe':4,'safety':5,'fire':5,'electrocution':5,'electric shock':5,'shock':3,'accident':5,'crash':5,'flood':4,'water':2,'high voltage':6,'orange cables':6,'pedestrian':4,'quiet':3,'silent':3,'avas':5,'heavy':3,'weight':3,'jump start':4},
+   a:`<h4>🛡️ EV safety</h4>
+   <ul>
+     <li><b>Pedestrians:</b> EVs are very quiet below about 30 km/h. New EVs emit a warning hum (AVAS), but you still need to <b>drive defensively</b> in car parks, near schools and in townships or suburbs with lots of people on foot.</li>
+     <li><b>Weight:</b> EVs are typically 300–500 kg heavier than similar petrol cars. Braking distances can be a little longer, so keep a safe following distance.</li>
+     <li><b>Low centre of gravity:</b> the battery under the floor makes EVs very stable and resistant to rollover. EVs often score highly in crash tests.</li>
+     <li><b>Fire risk:</b> studies show EVs catch fire <b>less often</b> than petrol cars. Battery fires are harder to put out, though, so if you ever see smoke coming from under the car, stop, get everyone out, move well away and call emergency services.</li>
+     <li><b>High voltage:</b> never touch <b>orange cables</b> or open battery components. The system cuts power automatically in a crash.</li>
+     <li><b>Charging:</b> it's completely safe to sit in the car or touch it while charging. Don't use damaged cables or household extension leads.</li>
+   </ul>`,
+   next:['emergency','maintenance','regen']},
+
+ { id:'maintenance', title:'Maintenance', lesson:15,
+   kw:{'maintenance':6,'service':5,'servicing':5,'oil':4,'oil change':5,'tyres':3,'tyre':3,'tires':3,'brake fluid':5,'coolant':5,'12v':6,'12 volt':6,'cabin filter':5,'wipers':2,'repair':3,'mechanic':4},
+   a:`<h4>🔧 What maintenance does an EV need?</h4>
+   <p>Far less than a petrol car. There's <b>no oil, no spark plugs, no timing belt, no clutch and no exhaust</b>, and the motor has very few moving parts.</p>
+   <p><b>What still needs attention:</b></p>
+   <ul>
+     <li><b>Tyres:</b> the extra weight and instant torque mean <b>faster tyre wear</b>. Rotate them every 10,000 km and check pressures monthly.</li>
+     <li><b>Brakes:</b> pads last much longer, but <b>brake fluid</b> should still be replaced every 2 years or so.</li>
+     <li><b>Coolant</b> for the battery thermal system, as your manual specifies (often every 4–8 years).</li>
+     <li><b>Cabin air filter</b> every year, plus wipers and washer fluid.</li>
+     <li><b>12 V battery:</b> yes, EVs still have one. It powers the computers and locks. If it dies, the car won't "start" even with a full main battery.</li>
+     <li><b>Software updates:</b> many EVs get improvements over the air, so install them.</li>
+   </ul>
+   <div class="tip">💡 Typical EV servicing costs about <b>30–50% less</b> than for a petrol car over 5 years.</div>`,
+   next:['tyres','battery-health','safety']},
+
+ { id:'tyres', title:'Tyres for EVs', lesson:null,
+   kw:{'tyre wear':6,'tyres wear':6,'ev tyres':6,'rolling resistance':6,'tyre pressure':6,'puncture':5,'spare wheel':5,'spare tyre':5,'tyre repair kit':5},
+   a:`<h4>🛞 Tyres for EVs</h4>
+   <ul>
+     <li><b>Replace with EV-rated tyres</b> (marked "EV", "Elect" or "HL" load index). They're designed for the weight, low rolling resistance and low noise.</li>
+     <li>Keep pressures at the level on the door sticker. Pressures 10% too low can cost around 3–5% of your range.</li>
+     <li><b>Many EVs have no spare wheel</b>, only a sealant kit. Find out what your car has <i>before</i> a long trip, and consider carrying a plug kit or checking your roadside-assistance cover.</li>
+     <li>Gentle acceleration and rotating your tyres can extend their life by thousands of km.</li>
+   </ul>`,
+   next:['maintenance','efficient','roadtrip']},
+
+ { id:'emergency', title:'Running low or breaking down', lesson:16,
+   kw:{'run out':6,'ran out':6,'running out':6,'empty':4,'flat battery':6,'dead battery':6,'0%':5,'turtle':6,'limp mode':6,'stranded':5,'breakdown':5,'broken down':5,'tow':4,'towing':3,'tow truck':5,'roadside':4,'low battery':5},
+   a:`<h4>🚨 Running low or breaking down</h4>
+   <ul>
+     <li><b>Warnings come early.</b> The car warns you at about 15–20%, and again at about 5%. Navigation will usually suggest nearby chargers.</li>
+     <li><b>Turtle (limp) mode:</b> near empty, the car limits power to stretch the last few km. Slow down, switch off the aircon and head straight to the nearest charger or plug point.</li>
+     <li><b>"0%" isn't completely empty.</b> There's a small buffer, but don't count on it.</li>
+     <li><b>If you run out:</b> call your roadside assistance. Many manufacturers include it with the car. Some services carry mobile chargers. Otherwise, a nearby restaurant or garage plug point plus your portable cable can add enough range to reach a charger.</li>
+     <li><b>Towing:</b> most EVs <b>must go on a flatbed</b>. Towing with the drive wheels on the ground can damage the motor. Check your manual, and tell the tow company it's an EV.</li>
+     <li><b>12 V battery flat?</b> The car can be jump-started like a normal car using the 12 V terminals (usually under the bonnet). Never try to jump the high-voltage system.</li>
+   </ul>`,
+   next:['roadtrip','safety','range']},
+
+ { id:'towing', title:'Towing a trailer or caravan', lesson:null,
+   kw:{'caravan':6,'trailer':6,'towbar':6,'tow bar':6,'tow capacity':6,'towing capacity':6,'bike rack':4,'boat':3},
+   a:`<h4>🚙 Towing with an EV</h4>
+   <ul>
+     <li>Check your car's <b>approved towing capacity</b>. Some EVs aren't rated for towing at all, while others can tow 1,500–2,500 kg.</li>
+     <li>Expect range to drop <b>by 30–50%</b>, especially with a tall caravan, because of the extra drag.</li>
+     <li>Plan charging stops closer together, and look for <b>drive-through or "pull-through" chargers</b> so you don't have to unhitch.</li>
+     <li>Keep speed down. At 90–100 km/h, towing is far more efficient.</li>
+   </ul>`,
+   next:['roadtrip','range','efficient']},
+
+ { id:'types', title:'BEV vs hybrid vs plug-in hybrid', lesson:null,
+   kw:{'hybrid':6,'phev':6,'plug-in hybrid':6,'bev':6,'hev':5,'mild hybrid':5,'difference':3,'types of ev':6,'which ev':4,'buy':3,'should i buy':5,'choose':3,'range extender':5,'erev':5,'fuel cell':4,'hydrogen':4},
+   a:`<h4>🚗 BEV vs hybrid vs plug-in hybrid</h4>
+   <ul>
+     <li><b>BEV (battery electric):</b> electric only. You plug in to charge, and it has zero tailpipe emissions. Examples: BYD Dolphin, VW ID.4, Tesla Model 3.</li>
+     <li><b>PHEV (plug-in hybrid):</b> a smaller battery giving about 40–100 km of electric range, plus a petrol engine for longer trips. To get the benefit, you need to plug it in regularly.</li>
+     <li><b>HEV (hybrid):</b> charges itself through regen and the engine, and can't be plugged in. It's more efficient than petrol alone, but mostly runs on fuel. Example: Toyota Corolla Cross Hybrid.</li>
+     <li><b>EREV (range extender):</b> always driven by the electric motor, with a small petrol generator that recharges the battery.</li>
+   </ul>
+   <p><b>Choosing:</b> if you can charge at home or work and mostly drive less than 300 km a day, a BEV is usually cheapest to run. If you often travel long rural routes with few chargers, a PHEV can be a good stepping stone.</p>`,
+   next:['range','charging-cost','home-solar']},
+
+ { id:'units', title:'kW vs kWh explained', lesson:null,
+   kw:{'kw vs kwh':7,'kwh':4,'kilowatt':5,'kilowatt hour':6,'what is kwh':7,'what is kw':6,'difference between kw':7,'units':3,'battery size':4,'capacity':3},
+   a:`<h4>📏 kW vs kWh, the simple version</h4>
+   <ul>
+     <li><b>kWh (kilowatt-hour) = energy</b>, the size of your "tank". A 60 kWh battery is like a 60-litre fuel tank.</li>
+     <li><b>kW (kilowatt) = power</b>, how fast energy flows, like how fast a fuel pump fills the tank. A 7 kW charger adds 7 kWh every hour.</li>
+   </ul>
+   <p><b>Example:</b> a 60 kWh battery charging from 20% to 80% needs 36 kWh. On a 7 kW wallbox that takes about 36 ÷ 7 ≈ 5.5 hours (plus a little for losses). On a 100 kW DC charger it takes about 25–30 minutes.</p>`,
+   next:['charging','charging-cost','range']},
+
+ { id:'parking', title:'Parking, idling & vampire drain', lesson:null,
+   kw:{'vampire':6,'phantom drain':6,'drain':4,'parked':4,'parking':3,'airport':5,'leave car':5,'sentry':6,'idle':4,'idling':4,'traffic jam':5,'stuck in traffic':5,'overnight':2,'storage':4},
+   a:`<h4>🅿️ Parking, traffic jams and vampire drain</h4>
+   <ul>
+     <li><b>Traffic jams are no problem.</b> An EV uses almost no energy when stopped. Even with the aircon on, you'll lose only about 1–2% per hour.</li>
+     <li><b>Vampire drain:</b> a parked EV loses about 0.5–2% a day. Camera or security modes (such as Tesla Sentry) and frequent app checks increase this.</li>
+     <li><b>Long-term parking</b> (for example at the airport): leave the battery at about 50–70%, turn off security cameras and disable cabin overheat protection if you don't need it.</li>
+     <li><b>Hot parking:</b> parking in the shade reduces battery cooling, which saves range and helps the battery last longer.</li>
+   </ul>`,
+   next:['battery-health','weather','roadtrip']},
+];
+
+const SMALLTALK = [
+  { re:/^(hi|hello|hey|howzit|sawubona|molo|good (morning|afternoon|evening))\b/i,
+    a:()=>`Hi there! 👋 I'm <b>Volt</b>, your EV driving coach. Ask me about driving, charging, range or battery care, or follow the learning path on the left.`, chips:['Your first EV drive','One-pedal driving','How do I charge?'] },
+  { re:/\b(thanks|thank you|cheers|dankie|ngiyabonga)\b/i,
+    a:()=>`You're welcome! ⚡ Anything else you'd like to know?`, chips:['Quiz me','Road trip tips','Battery care'] },
+  { re:/\b(who are you|what are you|what can you do|help|menu|topics)\b/i,
+    a:()=>`I can teach you about:<ul>${KB.map(k=>`<li>${k.title}</li>`).join('')}</ul>You can also say <b>"quiz me"</b> to test yourself, or use the calculators on the right.`, chips:['Your first EV drive','Quiz me'] },
+];
+
+/* ===================== MATCHING ===================== */
+const norm = s => ' ' + s.toLowerCase().replace(/[’']/g,'').replace(/[^a-z0-9%/\-\. ]+/g,' ').replace(/\s+/g,' ').trim() + ' ';
+const stem = w => w.replace(/(ing|es|s)$/,'');
+
+function score(entry, text) {
+  let s = 0;
+  const words = text.trim().split(' ').map(stem);
+  for (const [k,w] of Object.entries(entry.kw)) {
+    if (k.includes(' ') || /[^a-z]/.test(k)) { if (text.includes(' '+k+' ') || text.includes(' '+k)) s += w; }
+    else if (words.includes(stem(k))) s += w;
+  }
+  if (text.includes(entry.title.toLowerCase())) s += 10;
+  return s;
+}
+
+function findAnswer(raw) {
+  const t = norm(raw);
+  const ranked = KB.map(e=>({e, s:score(e,t)})).filter(x=>x.s>0).sort((a,b)=>b.s-a.s);
+  return ranked;
+}
+
+/* ===================== CALC INTENT ===================== */
+function calcIntent(raw) {
+  const t = raw.toLowerCase();
+  const nums = (t.match(/\d+(\.\d+)?/g)||[]).map(Number);
+  if (/(cost|price|how much).*(charge|charging|fill)|(charge|charging).*(cost|price|how much)/.test(t) && nums.length) {
+    const bat = (t.match(/(\d+(\.\d+)?)\s*kwh(?!\s*\/)/)||[])[1];
+    const rate = (t.match(/r\s?(\d+(\.\d+)?)|(\d+(\.\d+)?)\s*(rand|r\/kwh|c\/kwh)/)||[]);
+    let r = rate[1]||rate[3]; if (r && /c\/kwh/.test(t)) r = r/100;
+    const B = Number(bat||60), R = Number(r||3.2);
+    const e = B*0.6/0.9, cost = e*R;
+    return `<h4>🧮 Quick charging-cost estimate</h4>
+      <p>Charging a <b>${B} kWh</b> battery from 20% to 80% at <b>R${R.toFixed(2)}/kWh</b>:</p>
+      <ul><li>Energy from the wall (including about 10% losses): <b>${e.toFixed(1)} kWh</b></li>
+      <li>Cost: <b>R${cost.toFixed(0)}</b></li>
+      <li>That's roughly <b>${Math.round(B*0.6/16*100)} km</b> at 16 kWh/100 km, or about <b>R${(cost/(B*0.6/16*100)).toFixed(2)}/km</b></li></ul>
+      <div class="tip">💡 Change the figures in the <b>Charging cost</b> calculator on the right for more detail.</div>`;
+  }
+  if (/(how long).*(charge|charging)|(charge|charging).*(how long|time)/.test(t)) {
+    const bat = Number((t.match(/(\d+(\.\d+)?)\s*kwh(?!\s*\/)/)||[])[1]||60);
+    const kw = Number((t.match(/(\d+(\.\d+)?)\s*kw(?!h)/)||[])[1]||0);
+    const e = bat*0.6;
+    if (kw) {
+      const eff = kw<=22 ? Math.min(kw, 11) : kw*0.7;
+      return `<h4>⏱️ Charge-time estimate</h4><p>For a <b>${bat} kWh</b> battery from 20% to 80% (${e.toFixed(0)} kWh) on a <b>${kw} kW</b> charger: about <b>${fmtTime(e/eff*(kw<=22?1.1:1))}</b>.</p>
+      <p class="warn">${kw<=22?'AC speed is limited by the car’s on-board charger, often 7–11 kW.':'DC speed tapers as the battery fills. Average power is usually about 60–75% of the charger’s peak rating.'}</p>`;
+    }
+    return null;
+  }
+  return null;
+}
+function fmtTime(h){ const m=Math.round(h*60); return m<60? m+' min' : Math.floor(m/60)+' h '+(m%60? (m%60)+' min':''); }
+
+/* ===================== QUIZ ===================== */
+const QUIZ = [
+  {q:'What does regenerative braking do?', o:['Cools the brakes','Turns motion back into battery energy while slowing','Makes the car accelerate faster','Locks the wheels on ice'], a:1, why:'The motor acts as a generator, slowing the car and recharging the battery.'},
+  {q:'For a typical NMC battery, what is a good everyday charge limit?', o:['50%','80%','100% every night','Let it drop to 0% first'], a:1, why:'About 80% for daily use reduces stress on the cells. Charge to 100% only before long trips (LFP batteries are the exception).'},
+  {q:'Which plug is the main DC fast-charging standard in South Africa?', o:['CHAdeMO','Type 1','CCS2','A normal 3-pin plug'], a:2, why:'CCS2 (Combo 2) is the main DC standard in SA and Europe.'},
+  {q:'Which factor usually has the BIGGEST effect on highway range?', o:['Radio volume','Speed','Paint colour','Headlights'], a:1, why:'Air resistance rises sharply with speed. 120 km/h uses far more energy than 100 km/h.'},
+  {q:'Why does fast charging slow down after about 80%?', o:['The charger gets tired','To protect the battery as it gets full','Because of load-shedding','It’s a billing trick'], a:1, why:'The car deliberately reduces the power as the cells fill up.'},
+  {q:'A 7 kW charger adds about how much energy per hour?', o:['0.7 kWh','7 kWh','70 kWh','7 litres'], a:1, why:'kW is a rate: 7 kW × 1 hour = 7 kWh.'},
+  {q:'What is the best way to tow a broken-down EV?', o:['Rope tow behind a bakkie','On a flatbed truck','Push it in neutral','Any way is fine'], a:1, why:'Towing with the drive wheels turning can damage the motor. Use a flatbed unless your manual says otherwise.'},
+  {q:'Do EVs need a 12 V battery?', o:['No, never','Yes, it powers the car’s electronics and locks','Only for the radio','Only on hybrids'], a:1, why:'If the 12 V battery is flat, the car won’t start, even with a full main battery.'},
+  {q:'Which uses LESS energy to keep you warm in winter?', o:['Seat and steering-wheel heaters','Cabin heater on full','Opening the windows','Sport mode'], a:0, why:'Heated seats warm you directly and use a fraction of the energy needed to heat all the air in the cabin.'},
+  {q:'Can you safely charge an EV in the rain?', o:['No, it’s dangerous','Yes, the connectors and cars are designed for it','Only on DC','Only with gloves'], a:1, why:'Charge ports and plugs are sealed, and power flows only once the car and charger have checked the connection.'},
+];
+let quiz = null;
+
+function startQuiz() {
+  mtabTo('p-chat');
+  const qs = [...QUIZ].sort(()=>Math.random()-.5).slice(0,5);
+  quiz = { qs, i:0, score:0 };
+  addBot(`<h4>🎯 EV knowledge quiz</h4><p>5 quick questions. Let's see what you know!</p>`);
+  setTimeout(askQ, 400);
+}
+function askQ() {
+  const q = quiz.qs[quiz.i];
+  const id = 'q'+Date.now();
+  addBot(`<p><b>Question ${quiz.i+1} of ${quiz.qs.length}:</b> ${q.q}</p><div id="${id}">${q.o.map((o,i)=>`<button class="quiz-opt" data-i="${i}">${o}</button>`).join('')}</div>`);
+  document.getElementById(id).addEventListener('click', e=>{
+    const b = e.target.closest('.quiz-opt'); if (!b) return;
+    const pick = +b.dataset.i, box = b.parentElement;
+    box.querySelectorAll('.quiz-opt').forEach(x=>{ x.disabled=true; if(+x.dataset.i===q.a) x.classList.add('right'); });
+    if (pick===q.a) quiz.score++; else b.classList.add('wrong');
+    addBot(`${pick===q.a?'✅ <b>Correct!</b>':'❌ <b>Not quite.</b>'} ${q.why}`);
+    quiz.i++;
+    if (quiz.i < quiz.qs.length) setTimeout(askQ, 700);
+    else setTimeout(()=>{
+      const s = quiz.score, n = quiz.qs.length;
+      addBot(`<h4>🏁 Quiz complete: ${s}/${n}</h4><p>${s===n?'Perfect score! You’re ready to hit the road. 🏆':s>=3?'Nice work! Review the topics you missed and you’ll be an EV pro.':'Good start. Work through the learning path and try again!'}</p>`, ['Quiz me again','Your first EV drive','Battery care']);
+      quiz = null;
+    }, 700);
+  });
+}
+
+/* ===================== PROGRESS ===================== */
+const LESSONS = KB.filter(k=>k.lesson).sort((a,b)=>a.lesson-b.lesson);
+let done = new Set();
+try { done = new Set(JSON.parse(localStorage.getItem('evcoach-done')||'[]')); } catch(e) {}
+function saveDone(){ try { localStorage.setItem('evcoach-done', JSON.stringify([...done])); } catch(e) {} }
+function renderLessons() {
+  document.getElementById('lessonList').innerHTML = LESSONS.map(l=>
+    `<div class="lesson ${done.has(l.id)?'done':''}" onclick="openTopic('${l.id}')"><span class="num">${done.has(l.id)?'✓':l.lesson}</span>${l.title}</div>`).join('');
+  const n = LESSONS.filter(l=>done.has(l.id)).length;
+  document.getElementById('progTxt').textContent = `${n} / ${LESSONS.length}`;
+  document.getElementById('progFill').style.width = (n/LESSONS.length*100)+'%';
+}
+function resetProgress(){ done.clear(); saveDone(); renderLessons(); }
+
+/* ===================== CHAT UI ===================== */
+const msgsEl = document.getElementById('msgs');
+const esc = s => s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function addMsg(who, html, chips) {
+  const d = document.createElement('div');
+  d.className = 'msg '+who;
+  d.innerHTML = (who==='bot'?'<div class="avatar">⚡</div>':'') + `<div class="bubble">${html}${chips&&chips.length?`<div class="chips">${chips.map(c=>`<button class="chip">${esc(c)}</button>`).join('')}</div>`:''}</div>`;
+  d.querySelectorAll('.chip').forEach(c=>c.onclick=()=>userSays(c.textContent));
+  msgsEl.appendChild(d);
+  msgsEl.scrollTop = msgsEl.scrollHeight;
+  return d;
+}
+const addBot = (h,c)=>addMsg('bot',h,c);
+
+function botReply(html, chips) {
+  const t = addMsg('bot','<div class="typing"><span></span><span></span><span></span></div>');
+  setTimeout(()=>{ t.remove(); addBot(html, chips); }, 350 + Math.min(html.length/8, 500));
+}
+
+function topicChips(entry){ return (entry.next||[]).map(id=>KB.find(k=>k.id===id)).filter(Boolean).map(k=>k.title); }
+
+function openTopic(id) {
+  mtabTo('p-chat');
+  const e = KB.find(k=>k.id===id);
+  addMsg('user', esc(e.title));
+  answerEntry(e);
+}
+function answerEntry(e) {
+  if (e.lesson) { done.add(e.id); saveDone(); renderLessons(); }
+  const nextLesson = e.lesson ? LESSONS.find(l=>l.lesson===e.lesson+1) : null;
+  const chips = topicChips(e);
+  if (nextLesson && !chips.includes(nextLesson.title)) chips.unshift('Next lesson: '+nextLesson.title);
+  botReply(e.a, chips);
+}
+
+function userSays(text) {
+  text = text.trim(); if (!text) return;
+  addMsg('user', esc(text));
+  respond(text);
+}
+
+function respond(text) {
+  const t = text.toLowerCase();
+  if (/^next lesson: /i.test(text)) { const e = KB.find(k=>k.title.toLowerCase()===t.replace(/^next lesson: /,'')); if (e) return answerEntry(e); }
+  if (/\bquiz\b|test me|test my knowledge/.test(t)) return startQuiz();
+  const exact = KB.find(k=>k.title.toLowerCase()===t);
+  if (exact) return answerEntry(exact);
+  const calc = calcIntent(text);
+  if (calc) return botReply(calc, ['Charging basics: AC vs DC','What does charging cost?']);
+  for (const s of SMALLTALK) if (s.re.test(text) && findAnswer(text).every(r=>r.s<4)) return botReply(s.a(), s.chips);
+  const ranked = findAnswer(text);
+  if (ranked.length && ranked[0].s >= 3) {
+    const top = ranked[0].e;
+    answerEntry(top);
+    const alt = ranked.slice(1).filter(r=>r.s >= ranked[0].s*0.7).slice(0,2);
+    if (alt.length) setTimeout(()=>addBot('Related topics you might also want:', alt.map(r=>r.e.title)), 1100);
+    return;
+  }
+  const guesses = ranked.slice(0,3).map(r=>r.e.title);
+  botReply(`Hmm, I'm not sure I understood that. 🤔 I'm an EV driving coach, so try asking about driving, charging, range, battery care, costs or safety.${guesses.length?' Did you mean one of these?':''}`,
+    guesses.length ? guesses : ['Your first EV drive','How do I charge?','Range & what affects it','Quiz me']);
+}
+
+function send(ev){ ev.preventDefault(); const i=document.getElementById('inp'); const v=i.value; i.value=''; userSays(v); }
+function clearChat(){ msgsEl.innerHTML=''; quiz=null; greet(); }
+function greet(){
+  addBot(`<h4>👋 Hi, I'm Volt, your EV driving coach</h4>
+  <p>Whether you're test-driving your first electric car or just picked one up, I'll help you drive smoothly, charge smartly and look after the battery.</p>
+  <p>Ask me anything, follow the <b>learning path</b>, or try a question below:</p>`,
+  ['Your first EV drive','How does one-pedal driving work?','How do I charge?','How far can I really go?','Charging during load-shedding','Quiz me']);
+}
+
+/* ===================== CALCULATORS ===================== */
+const $ = id => document.getElementById(id);
+const v = id => parseFloat($(id).value)||0;
+function calcCharge(){
+  const bat=v('cBat'), rate=v('cRate'), from=Math.min(v('cFrom'),100), to=Math.min(v('cTo'),100), kw=v('cKw');
+  const added = Math.max(0,(to-from)/100*bat);
+  const isDC = kw>22;
+  const loss = isDC?0.95:0.9;
+  const grid = added/loss;
+  const avgKw = isDC ? kw*0.7 : Math.min(kw,11);
+  const hrs = added/avgKw;
+  $('cOut').innerHTML = `<div class="trow"><span>Energy added</span><span class="tval">${added.toFixed(1)} kWh</span></div>
+    <div class="trow"><span>From the grid (incl. losses)</span><span class="tval">${grid.toFixed(1)} kWh</span></div>
+    <div class="trow"><span>Approx. time</span><span class="tval">${added?fmtTime(hrs):'—'}</span></div>
+    <div class="trow"><span>Range added (≈16 kWh/100km)</span><span class="tval">${Math.round(added/16*100)} km</span></div>
+    <div style="margin-top:6px">Cost: <span class="big">R${(grid*rate).toFixed(0)}</span></div>`;
+}
+function calcRange(){
+  const usable=v('rBat')*v('rSoc')/100, cons=v('rStyle')*v('rHvac')*v('rLoad');
+  const km = usable/cons*100;
+  $('rOut').innerHTML = `<div class="trow"><span>Energy available</span><span class="tval">${usable.toFixed(1)} kWh</span></div>
+    <div class="trow"><span>Consumption</span><span class="tval">${cons.toFixed(1)} kWh/100km</span></div>
+    <div class="trow"><span>Keeping a 10% buffer</span><span class="tval">${Math.round(km - v('rBat')*0.1/cons*100)} km</span></div>
+    <div style="margin-top:6px">Estimated range: <span class="big">${Math.round(km)} km</span></div>`;
+}
+function calcPetrol(){
+  const km=v('pKm'), petrol=km/100*v('pL')*v('pPetrol'), ev=km/100*v('pE')/0.9*v('cRate');
+  $('pOut').innerHTML = `<div class="trow"><span>Petrol car</span><span class="tval">R${petrol.toFixed(0)}</span></div>
+    <div class="trow"><span>EV at home (R${v('cRate').toFixed(2)}/kWh)</span><span class="tval">R${ev.toFixed(0)}</span></div>
+    <div style="margin-top:6px">You save about <span class="big">R${Math.max(0,petrol-ev).toFixed(0)}</span>/month</div>
+    <div class="trow"><span>Per year</span><span class="tval">R${Math.max(0,(petrol-ev)*12).toFixed(0)}</span></div>`;
+}
+['cBat','cRate','cFrom','cTo','cKw'].forEach(id=>$(id).addEventListener('input',()=>{calcCharge();calcPetrol();}));
+['rBat','rSoc','rStyle','rHvac','rLoad'].forEach(id=>$(id).addEventListener('input',calcRange));
+['pKm','pPetrol','pL','pE'].forEach(id=>$(id).addEventListener('input',calcPetrol));
+
+/* ===================== MOBILE TABS ===================== */
+function mtab(el){ mtabTo(el.dataset.p); }
+function mtabTo(id){
+  document.querySelectorAll('.mobile-tabs div').forEach(d=>d.classList.toggle('active', d.dataset.p===id));
+  document.querySelectorAll('.layout > .panel').forEach(p=>p.classList.toggle('m-active', p.id===id));
+}
+
+/* ===================== INIT ===================== */
+renderLessons(); calcCharge(); calcRange(); calcPetrol(); greet();
+</script>
+</body>
+</html>
